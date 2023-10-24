@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+service AudioService {
+    rpc RunCmd (Command) returns (CmdOutput);
+    rpc GetAudioMetadata (File) returns (AudioMetadata);
+    rpc StreamAudio (Empty) returns (stream AudioData);
+}
+
+message Command {
+    // Command to be run
+    string cmd = 1;
+    // Optional arg
+    string arg = 2;
+}
+
+message File {
+    string name = 1;
+}
+
+message CmdOutput {
+    string output = 1;
+}
+
+message AudioMetadata {
+  int32 AverageBytesPerSecond = 1;
+  int32 BitsPerSample = 2;
+  int32 BlockAlign = 3;
+  int32 Channels = 4;
+  int32 ExtraSize = 5;
+  int32 SampleRate = 6;
+}
+
+message AudioData {
+    bytes bytes = 1;
+}
+
+// TODO: cannot import "google/protobuf/empty.proto"; so this is a workaround
+message Empty {
+}
