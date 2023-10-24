@@ -21,7 +21,7 @@ message File {
 }
 
 message CmdOutput {
-    string output = 1;
+    string message = 1;
 }
 
 message AudioMetadata {
