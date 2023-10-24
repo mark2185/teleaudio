@@ -3,8 +3,6 @@ import "google/protobuf/empty.proto";
 
 package audioservice;
 
-option cc_generic_services = true;
-
 service AudioService {
     rpc RunCmd (Command) returns (CmdOutput);
     rpc GetAudioMetadata (File) returns (AudioMetadata);
