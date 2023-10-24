@@ -1,8 +1,20 @@
-// #include <grpcpp/grpcpp.h>
-// #include "communication.pb.h"
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
 
-// using grpc::Server;
+#include "communication.pb.h"
 
-// class AudioServiceImpl final : public AudioService::Service {
+using grpc::Server;
+using grpc::Status;
+using grpc::ServerContext;
 
-// };
+namespace audioservice
+{
+    class AudioServiceImpl final : public AudioService::Service {
+        Status RunCmd( ServerContext* context, Command const * request, CmdOutput * output ) override {
+
+            return Status::OK;
+        }
+
+    };
+}

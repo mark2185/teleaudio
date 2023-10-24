@@ -82,9 +82,9 @@ struct File
 
     [[ nodiscard ]] bool valid() const
     {
-        auto const riffValid{ riff.valid() };
-        auto const formatValid{ format.valid() };
-        auto const dataValid{ data.valid() };
+        [[ maybe_unused ]] auto const riffValid{ riff.valid() };
+        [[ maybe_unused ]] auto const formatValid{ format.valid() };
+        [[ maybe_unused ]] auto const dataValid{ data.valid() };
         return riff.valid() && format.valid() && data.valid();
     }
 

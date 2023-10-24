@@ -1,9 +1,14 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
+
+package audioservice;
+
+option cc_generic_services = true;
 
 service AudioService {
     rpc RunCmd (Command) returns (CmdOutput);
     rpc GetAudioMetadata (File) returns (AudioMetadata);
-    rpc StreamAudio (Empty) returns (stream AudioData);
+    rpc StreamAudio (google.protobuf.Empty) returns (stream AudioData);
 }
 
 message Command {
@@ -32,8 +37,4 @@ message AudioMetadata {
 
 message AudioData {
     bytes bytes = 1;
-}
-
-// TODO: cannot import "google/protobuf/empty.proto"; so this is a workaround
-message Empty {
 }
