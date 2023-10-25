@@ -105,13 +105,28 @@ namespace audioservice
                 // .SampleRate = 6,
             // };
             // writer->Write( AudioData
-            if ( writer->Write( response ) )
+            if ( !writer->Write( response ) )
             {
-                spdlog::info( "Write was successful, returning" );
+                spdlog::info( "Write of metadata was not successful, returning" );
+                return Status::OK;
+            }
+
+            auto const rawData{ song.data.data };
+            auto const rawDataSize{ song.data.subchunk2_size };
+            spdlog::info( "Rawdata size: {}", rawDataSize );
+
+            AudioData payload;
+            // payload.mutable_rawdata()->assign( reinterpret_cast< char const * >( rawData ), rawDataSize );
+            // payload.set_rawdata( std::string( reinterpret_cast< char const * >( rawData ), rawDataSize ) );
+            payload.set_rawdata( reinterpret_cast< char const * >( rawData ), rawDataSize );
+            spdlog::info( "Sending {} bytes", payload.ByteSizeLong() );
+            if ( !writer->Write( payload ) )
+            {
+                spdlog::error( "Failed to write raw data" );
             }
             else
             {
-                spdlog::error( "Failed to write metadata" );
+                spdlog::info( "Successfully sent raw data!" );
             }
             return Status::OK;
         }
@@ -137,12 +152,18 @@ namespace audioserver
 
             spdlog::info( "Reading data back" );
             AudioData data{};
+            reader->Read( &data );
+            spdlog::info( "Read some meta data!" );
+            spdlog::info( "Metadata: {}", data.metadata().averagebytespersecond() );
+
+            spdlog::info( "Starting read loop" );
             while( reader->Read( &data ) )
             {
-                spdlog::info( "Read some data!" );
-                spdlog::info( "Metadata: {}", data.metadata().averagebytespersecond() );
+                spdlog::info( "Read some raw data!" );
+                spdlog::info( "{}", data.rawdata().size() );
             }
             spdlog::info( "End of reading loop" );
+
             Status status = reader->Finish();
             if ( status.ok() )
             {
