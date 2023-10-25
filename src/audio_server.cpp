@@ -32,30 +32,6 @@ namespace audioservice
 
     };
 
-    void run_server( std::int16_t const port )
-    {
-        // TODO:
-        std::string const server_address{ "0.0.0.0:5371" };
-        AudioServiceImpl service;
-
-        grpc::EnableDefaultHealthCheckService(true);
-        grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-        ServerBuilder builder;
-        // Listen on the given address without any authentication mechanism.
-        builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-        // Register "service" as the instance through which we'll communicate with
-        // clients. In this case it corresponds to a *synchronous* service.
-        builder.RegisterService(&service);
-        // Finally assemble the server.
-        std::unique_ptr<Server> server(builder.BuildAndStart());
-        spdlog::info( "Server listening on {}", server_address );
-
-        // Wait for the server to shutdown. Note that some other thread must be
-        // responsible for shutting down the server for this call to ever return.
-        server->Wait();
-    }
-
-
 } // namespace audioservice
 
 namespace audioserver
@@ -86,7 +62,31 @@ namespace audioserver
                 << std::endl;
             return "RPC failed";
         }
-
     }
+
+    void run_server( std::int16_t const port )
+    {
+        // TODO:
+        std::string const server_address{ "0.0.0.0:5371" };
+
+        AudioServiceImpl service;
+
+        // grpc::EnableDefaultHealthCheckService(true);
+        // grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+        ServerBuilder builder;
+        // Listen on the given address without any authentication mechanism.
+        builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+        // Register "service" as the instance through which we'll communicate with
+        // clients. In this case it corresponds to a *synchronous* service.
+        builder.RegisterService(&service);
+        // Finally assemble the server.
+        std::unique_ptr<Server> server(builder.BuildAndStart());
+        spdlog::info( "Server listening on {}", server_address );
+
+        // Wait for the server to shutdown. Note that some other thread must be
+        // responsible for shutting down the server for this call to ever return.
+        server->Wait();
+    }
+
 
 } // namespace audioserver

@@ -13,7 +13,7 @@ void print_help()
 
 int main( int argc, char const * argv[] )
 {
-    if ( std::string{ "server" } == argv[ 1 ] )
+    if ( argc > 1 &&  std::string{ "server" } == argv[ 1 ] )
     {
         if ( argc != 3 )
         {
@@ -28,7 +28,10 @@ int main( int argc, char const * argv[] )
     }
     else
     {
-        audioserver::AudioClient c{ grpc::CreateChannel("localhost:5421", grpc::InsecureChannelCredentials()) };
+        audioserver::AudioClient c{ grpc::CreateChannel("localhost:5371", grpc::InsecureChannelCredentials()) };
+        std::string const cmd{ "ls" };
+        std::string const reply{ c.RunCmd( cmd, "" ) };
+        spdlog::info( "Received: {}", reply );
     }
     // WAV::File song{ "/home/mark/workspace/gits/teleaudio/test/storage/Speech/Swedish/GOAWAY.WAV" };
     // if ( !song.valid() )
