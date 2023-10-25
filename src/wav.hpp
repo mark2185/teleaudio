@@ -103,10 +103,42 @@ struct File
             return;
         }
 
-        auto buffer{ std::make_unique< std::byte[] >( sizeof( WAV::File ) ) };
-        std::fread( buffer.get(), sizeof( WAV::File ), 1, file_handle.get() );
-
-        *this = *reinterpret_cast< WAV::File * >( buffer.get() );
+        {
+            auto buffer{ std::make_unique< std::byte[] >( sizeof( RiffChunk ) ) };
+            auto const res{ std::fread( buffer.get(), 1, sizeof( RiffChunk ), file_handle.get() ) };
+            if ( res != sizeof( RiffChunk ) )
+            {
+                spdlog::error( "Failed reading riff chunk, read {} bytes, but should have read {} bytes.", res, sizeof( WAV::RiffChunk ) );
+            }
+            riff = *reinterpret_cast< RiffChunk * >( buffer.get() );
+        }
+        {
+            auto buffer{ std::make_unique< std::byte[] >( sizeof( FmtSubChunk ) ) };
+            auto const res{ std::fread( buffer.get(), 1, sizeof( FmtSubChunk ), file_handle.get() ) };
+            if ( res != sizeof( FmtSubChunk ) )
+            {
+                spdlog::error( "Failed reading format chunk, read {} bytes, but should have read {} bytes.", res, sizeof( WAV::FmtSubChunk ) );
+            }
+            format = *reinterpret_cast< FmtSubChunk * >( buffer.get() );
+        }
+        {
+            // reading only the id and datasize
+            auto buffer{ std::make_unique< std::byte[] >( 8 ) };
+            auto const res{ std::fread( buffer.get(), 1, 8, file_handle.get() ) };
+            if ( res != 8 )
+            {
+                spdlog::error( "Failed reading data chunk, read {} bytes, but should have read {} bytes.", res, 8 );
+            }
+            data.subchunk2_id = { buffer[0], buffer[1], buffer[2], buffer[3] };
+            data.subchunk2_size = *reinterpret_cast< std::uint32_t * >( buffer.get() + 4 );
+            buffer = std::make_unique< std::byte[] >( data.subchunk2_size );
+            auto const rawDataRes{ std::fread( buffer.get(), 1, data.subchunk2_size, file_handle.get() ) };
+            if ( rawDataRes != data.subchunk2_size )
+            {
+                spdlog::error( "Failed reading raw data chunk, read {} bytes, but should have read {} bytes.", rawDataRes, 666 );
+            }
+            data.data = buffer.release();
+        }
     }
 
 } __attribute__((packed)); // TODO: msvc
