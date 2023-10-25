@@ -26,12 +26,12 @@ message CmdOutput {
 }
 
 message AudioMetadata {
-  int32 AverageBytesPerSecond = 1;
-  int32 BitsPerSample = 2;
-  int32 BlockAlign = 3;
-  int32 Channels = 4;
-  int32 ExtraSize = 5;
-  int32 SampleRate = 6;
+  uint32 AverageBytesPerSecond = 1;
+  uint32 BitsPerSample = 2;
+  uint32 BlockAlign = 3;
+  uint32 Channels = 4;
+  uint32 ExtraSize = 5;
+  uint32 SampleRate = 6;
 }
 
 message AudioData {
