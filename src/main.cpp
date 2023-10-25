@@ -1,5 +1,6 @@
 #include <cstdio>
 
+#include "audio_client.hpp"
 #include "audio_server.hpp"
 #include "wav.hpp"
 #include "spdlog/spdlog.h"
@@ -15,12 +16,13 @@ int main( int argc, char const * argv[] )
 {
     if ( argc == 1 )
     {
-        audioserver::AudioClient c{ grpc::CreateChannel("localhost:5371", grpc::InsecureChannelCredentials()) };
+        Teleaudio::AudioClient c{ grpc::CreateChannel("localhost:5371", grpc::InsecureChannelCredentials()) };
         // std::string const cmd{ "ls" };
         // std::string const reply{ c.RunCmd( cmd, "" ) };
         // spdlog::info( "Received:\n{}", c.RunCmd( "ls", "" ) );
-        spdlog::info( "Received:\n{}", c.RunCmd( "play", "nonexistant.wav" ) );
-        spdlog::info( "Received:\n{}", c.RunCmd( "play", "AMAZING.wav" ) );
+        spdlog::info( "Received:\n{}", c.List() );
+        spdlog::info( "Received:\n{}", c.Play( "AMAZING.wav" ) );
+        spdlog::info( "Received:\n{}", c.Download( "AMAZING.wav", "/tmp/amazing.wav" ) );
         spdlog::info( "Exiting!" );
     }
     else if ( std::string{ "server" } == argv[ 1 ] )
@@ -35,7 +37,7 @@ int main( int argc, char const * argv[] )
         std::string const port_arg{ argv[ 3 ] };
         int port;
         std::from_chars( port_arg.data(), port_arg.data() + port_arg.size(), port );
-        audioserver::run_server( storage, port );
+        Teleaudio::run_server( storage, port );
     }
     // WAV::File song{ "/home/mark/workspace/gits/teleaudio/test/storage/Speech/Swedish/GOAWAY.WAV" };
     // if ( !song.valid() )
