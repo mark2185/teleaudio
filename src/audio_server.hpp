@@ -15,6 +15,8 @@ namespace audioserver
     using grpc::Channel;
     using grpc::ClientContext;
     using grpc::Server;
+    using grpc::ClientReader;
+    using grpc::ServerWriter;
     using grpc::Status;
     using grpc::ServerContext;
     using grpc::ServerBuilder;
@@ -29,6 +31,10 @@ namespace audioserver
             // Assembles the client's payload, sends it and presents the response back
             // from the server.
             std::string RunCmd( std::string const & cmd, std::string const & arg );
+
+            // Assembles the client's payload, sends it and presents the response back
+            // from the server.
+            // std::string Play( std::string const & cmd, std::string const & arg );
 
         private:
             std::unique_ptr<audioservice::AudioService::Stub> stub_;

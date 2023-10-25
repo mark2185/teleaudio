@@ -16,9 +16,11 @@ int main( int argc, char const * argv[] )
     if ( argc == 1 )
     {
         audioserver::AudioClient c{ grpc::CreateChannel("localhost:5371", grpc::InsecureChannelCredentials()) };
-        std::string const cmd{ "ls" };
-        std::string const reply{ c.RunCmd( cmd, "" ) };
-        spdlog::info( "Received:\n{}", reply );
+        // std::string const cmd{ "ls" };
+        // std::string const reply{ c.RunCmd( cmd, "" ) };
+        // spdlog::info( "Received:\n{}", c.RunCmd( "ls", "" ) );
+        // spdlog::info( "Received:\n{}", c.RunCmd( "play", "nonexistant.wav" ) );
+        spdlog::info( "Received:\n{}", c.RunCmd( "play", "AMAZING.wav" ) );
         spdlog::info( "Exiting!" );
     }
     else if ( std::string{ "server" } == argv[ 1 ] )

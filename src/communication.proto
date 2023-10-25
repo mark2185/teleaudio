@@ -5,6 +5,7 @@ package audioservice;
 
 service AudioService {
     rpc RunCmd (Command) returns (CmdOutput);
+    rpc Play (File) returns (stream AudioData);
     rpc GetAudioMetadata (File) returns (AudioMetadata);
     rpc StreamAudio (google.protobuf.Empty) returns (stream AudioData);
 }
@@ -34,5 +35,8 @@ message AudioMetadata {
 }
 
 message AudioData {
-    bytes bytes = 1;
+    oneof response {
+        AudioMetadata MetaData = 1;
+        bytes RawData = 2;
+    }
 }
