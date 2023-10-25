@@ -21,6 +21,7 @@ struct MagicBytes
 
 struct RiffChunk
 {
+    // TODO: set default values to magic bytes for easier generating of a semi-valid chunk
     std::array< std::byte, 4 > id;
     std::uint32_t              size;
     std::array< std::byte, 4 > format;
@@ -34,6 +35,14 @@ struct RiffChunk
         };
         return magic_bytes_match;
     }
+
+    // for easier generation before writing to a file
+    void addMagicBytes()
+    {
+        id = MagicBytes::RIFF;
+        format = MagicBytes::WAVE;
+    }
+
 } __attribute__((packed));
 
 struct FmtSubChunk
@@ -56,6 +65,9 @@ struct FmtSubChunk
             && expected_byte_rate   == byte_rate
             && expected_block_align == block_align;
     }
+
+    void addMagicBytes() { subchunk1_id = MagicBytes::fmt; }
+
 } __attribute__((packed));
 
 struct DataSubchunk
@@ -70,6 +82,11 @@ struct DataSubchunk
         return magic_bytes_match;
     }
 
+    void addMagicBytes()
+    {
+        subchunk2_id = MagicBytes::data;
+    }
+
 } __attribute__((packed));
 
 struct File
@@ -78,6 +95,10 @@ struct File
     FmtSubChunk format{};
     DataSubchunk data{};
 
+    std::uint32_t size_in_bytes() const
+    {
+        return riff.size + 8;
+    }
     // FileUtils::FilePtr file_handle;
 
     [[ nodiscard ]] bool valid() const
@@ -94,6 +115,8 @@ struct File
     // ~File() = default;
     // File          ( File const & ) = delete;
     // File operator=( File const & ) = delete;
+
+    File() = default;
 
     File( std::string_view const filename )
     {
@@ -141,6 +164,29 @@ struct File
         }
     }
 
+    void addMagicBytes()
+    {
+        riff.addMagicBytes();
+        format.addMagicBytes();
+        data.addMagicBytes();
+    }
 } __attribute__((packed)); // TODO: msvc
+
+inline File constructPlaceholderWaveFile( FmtSubChunk const metadata, std::byte * rawData, std::uint32_t size )
+{
+    File ret;
+
+    ret.addMagicBytes();
+
+    ret.data.data           = rawData;
+    ret.data.subchunk2_size = size;
+
+    ret.format = metadata;
+    // ret.format.subchunk1_size = 16;
+
+    ret.riff.size = 4 + ( 8 + ret.format.subchunk1_size ) + ( 8 + ret.data.subchunk2_size );
+
+    return ret;
+}
 
 } // namespace WAV
