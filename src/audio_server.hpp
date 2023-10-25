@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "communication.grpc.pb.h"
 
@@ -18,7 +19,7 @@ namespace audioserver
     using grpc::ServerContext;
     using grpc::ServerBuilder;
 
-    void run_server(std::int16_t port);
+    void run_server( std::string_view directory, std::int16_t port);
 
     class AudioClient {
         public:

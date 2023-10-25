@@ -7,6 +7,28 @@
 #include <spdlog/spdlog.h>
 #include "audio_server.hpp"
 
+#include <filesystem>
+
+namespace fs = std::filesystem;
+
+static fs::path storage_directory;
+
+namespace
+{
+    [[ nodiscard ]] std::string ls( std::string_view const directory )
+    {
+        std::stringstream ss;
+        spdlog::info( "Looking for all files in the directory {}", ( storage_directory / directory ).string() );
+        for ( auto const & entry : fs::directory_iterator( storage_directory / directory ) ) 
+        {
+            if ( entry.is_regular_file() && entry.path().extension() == ".wav" )
+            {
+                ss << entry.path().filename() << '\n';
+            }
+        }
+        return ss.str();
+    }
+}
 
 namespace audioservice
 {
@@ -21,17 +43,17 @@ namespace audioservice
             }
             else if ( request->cmd() == "ls" )
             {
-                output->set_message( "worms\n" );
+                auto const dir{ request->arg() };
+                output->set_message( ls( dir ) );
             }
             else
             {
-
+                // play a sound
             }
             return Status::OK;
         }
 
     };
-
 } // namespace audioservice
 
 namespace audioserver
@@ -58,14 +80,15 @@ namespace audioserver
         if (status.ok()) {
             return reply.message();
         } else {
-            std::cout << status.error_code() << ": " << status.error_message()
-                << std::endl;
+            // TODO:
+            // spdlog::error( "{}: {}", status.error_code(), status.error_message() );
             return "RPC failed";
         }
     }
 
-    void run_server( std::int16_t const port )
+    void run_server( std::string_view const directory, std::int16_t const port )
     {
+        storage_directory = directory;
         // TODO:
         std::string const server_address{ "0.0.0.0:5371" };
 
@@ -74,6 +97,7 @@ namespace audioserver
         // grpc::EnableDefaultHealthCheckService(true);
         // grpc::reflection::InitProtoReflectionServerBuilderPlugin();
         ServerBuilder builder;
+
         // Listen on the given address without any authentication mechanism.
         builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
         // Register "service" as the instance through which we'll communicate with
@@ -81,6 +105,7 @@ namespace audioserver
         builder.RegisterService(&service);
         // Finally assemble the server.
         std::unique_ptr<Server> server(builder.BuildAndStart());
+
         spdlog::info( "Server listening on {}", server_address );
 
         // Wait for the server to shutdown. Note that some other thread must be
