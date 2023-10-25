@@ -66,7 +66,10 @@ struct FmtSubChunk
             && expected_block_align == block_align;
     }
 
-    void addMagicBytes() { subchunk1_id = MagicBytes::fmt; }
+    void addMagicBytes()
+    {
+        subchunk1_id = MagicBytes::fmt;
+    }
 
 } __attribute__((packed));
 
@@ -74,7 +77,7 @@ struct DataSubchunk
 {
     std::array< std::byte, 4 > subchunk2_id;
     std::uint32_t subchunk2_size;
-    std::byte * data;
+    std::byte const * data;
 
     [[ nodiscard ]] bool valid() const
     {
@@ -91,9 +94,9 @@ struct DataSubchunk
 
 struct File
 {
-    RiffChunk riff{};
-    FmtSubChunk format{};
-    DataSubchunk data{};
+    RiffChunk riff;
+    FmtSubChunk format;
+    DataSubchunk data;
 
     std::uint32_t size_in_bytes() const
     {
@@ -103,10 +106,10 @@ struct File
 
     [[ nodiscard ]] bool valid() const
     {
-        [[ maybe_unused ]] auto const riffValid{ riff.valid() };
-        [[ maybe_unused ]] auto const formatValid{ format.valid() };
-        [[ maybe_unused ]] auto const dataValid{ data.valid() };
-        return riff.valid() && format.valid() && data.valid();
+        auto const riffValid   { riff.valid() };
+        auto const formatValid { format.valid() };
+        auto const dataValid   { data.valid() };
+        return riffValid && formatValid && dataValid;
     }
 
 
@@ -162,6 +165,10 @@ struct File
             }
             data.data = buffer.release();
         }
+        if ( size_in_bytes() != riff.size )
+        {
+            spdlog::error( "Header does not match the math" );
+        }
     }
 
     void addMagicBytes()
@@ -170,13 +177,53 @@ struct File
         format.addMagicBytes();
         data.addMagicBytes();
     }
+
+    [[ nodiscard ]] bool write( std::string_view const path ) const
+    {
+        auto const fout{ FileUtils::openFile( path, FileUtils::FileOpenMode::WriteBinary ) };
+        if ( !fout )
+        {
+            spdlog::error( "Cannot open output file" );
+            return false;
+        }
+
+        // writing the data from the stack
+        {
+            auto const riffWrite{ std::fwrite( &riff, 1, sizeof( riff ), fout.get() ) };
+            auto const formatWrite{ std::fwrite( &format, 1, sizeof( format ), fout.get() ) };
+
+            auto const dataBytes{ sizeof( data.subchunk2_id ) + sizeof( data.subchunk2_size ) };
+            auto const dataWrite{ std::fwrite( &data, 1, dataBytes, fout.get() ) };
+
+            if
+            (
+                riffWrite   != sizeof( riff )
+             || formatWrite != sizeof( format )
+             || dataWrite   != dataBytes
+            )
+            {
+                spdlog::error( "Failed in writing the stack based data of the wav file" );
+                return false;
+            }
+
+        }
+        // writing the data from the heap, i.e. raw audio data
+        {
+            auto const ret{ std::fwrite( data.data, 1, data.subchunk2_size, fout.get() ) };
+            if ( ret != data.subchunk2_size )
+            {
+                spdlog::error( "Failed in writing the stack based data of the wav file" );
+                return false;
+            }
+        }
+
+        return true;
+    }
 } __attribute__((packed)); // TODO: msvc
 
 inline File constructPlaceholderWaveFile( FmtSubChunk const metadata, std::byte * rawData, std::uint32_t size )
 {
     File ret;
-
-    ret.addMagicBytes();
 
     ret.data.data           = rawData;
     ret.data.subchunk2_size = size;
@@ -186,6 +233,13 @@ inline File constructPlaceholderWaveFile( FmtSubChunk const metadata, std::byte 
 
     ret.riff.size = 4 + ( 8 + ret.format.subchunk1_size ) + ( 8 + ret.data.subchunk2_size );
 
+    ret.addMagicBytes();
+
+    if ( !ret.valid() )
+    {
+        spdlog::info( "Placeholder file is not valid" );
+    }
+    // assert( ret.valid() );
     return ret;
 }
 

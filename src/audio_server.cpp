@@ -19,7 +19,7 @@ namespace
     [[ nodiscard ]] std::string ls( std::string_view const directory )
     {
         std::stringstream ss;
-        spdlog::info( "Looking for all files in the directory {}", ( storage_directory / directory ).string() );
+        spdlog::debug( "Looking for all files in the directory {}", ( storage_directory / directory ).string() );
         for ( auto const & entry : fs::directory_iterator( storage_directory / directory ) ) 
         {
             if ( entry.is_regular_file() && entry.path().extension() == ".wav" )
@@ -51,7 +51,8 @@ namespace audioservice
             }
             else
             {
-                // play a sound
+                // TODO: play a sound
+                // TODO: this is done from the client side, maybe we should have listed commands in the .proto service definition
             }
             return Status::OK;
         }
@@ -74,48 +75,66 @@ namespace audioservice
             auto const file{ storage_directory / request->name() };
             if ( !fs::exists( file ) )
             {
-                spdlog::error( "File '{}' not available for playing", file.string() );
-                return Status::OK;
-            }
-            spdlog::info( "Playing file {}", file.string() );
-            WAV::File const song{ file.string() };
-            if ( !song.valid() )
-            {
-                if ( !song.riff.valid() )
-                {
-                    spdlog::error( "RIFF not valid!" );
-                }
-                if ( !song.format.valid() )
-                {
-                    spdlog::error( "Format not valid!" );
-                }
-                if ( !song.data.valid() )
-                {
-                    spdlog::error( "Data not valid!" );
-                }
-                spdlog::error( "Failed to open song '{}'", file.string() );
+                spdlog::error( "File '{}' not available for playing.", file.string() );
                 return Status::OK;
             }
 
+            spdlog::debug( "Playing file {}", file.string() );
+
+            WAV::File const song{ file.string() };
+            if ( !song.valid() )
+            {
+                // TODO: there are 40 bytes extra in the file AWESOME.wav somewhere
+                // the math doesn't add up
+                spdlog::debug( "Loaded file is not valid" );
+            }
+
+            // spdlog::info( "riff size {}, chunk1 size {}, chunk2 size: {}", song.riff.size, song.format.subchunk1_size, song.data.subchunk2_size );
+            // spdlog::info( "File size in bytes: {}", song.size_in_bytes() );
+            // if ( !song.valid() )
+            // {
+                // if ( !song.riff.valid() )
+                // {
+                    // spdlog::error( "RIFF not valid!" );
+                // }
+                // if ( !song.format.valid() )
+                // {
+                    // spdlog::error( "Format not valid!" );
+                // }
+                // if ( !song.data.valid() )
+                // {
+                    // spdlog::error( "Data not valid!" );
+                // }
+                // spdlog::error( "Failed to open song '{}'", file.string() );
+                // return Status::OK;
+            // }
+
+            // sending metadata first
+            AudioMetadata metadata{ setMetadata( song.format ) };
+            // TODO: maybe a cast operator
+            metadata.set_filesize( song.size_in_bytes() - 8 );
+            // spdlog::info( "Writing size to metadata: {}", song.size_in_bytes() - 8 );
+
             AudioData response;
-            AudioMetadata md{ setMetadata( song.format ) };
-            *response.mutable_metadata() = md;
+            *response.mutable_metadata() = metadata;
             if ( !writer->Write( response ) )
             {
-                spdlog::info( "Write of metadata was not successful, returning" );
+                spdlog::error( "Sending metadata failed, returning" );
                 return Status::OK;
             }
 
             auto const rawData{ song.data.data };
             auto const rawDataSize{ song.data.subchunk2_size };
-            spdlog::info( "Rawdata size: {}", rawDataSize );
+            spdlog::debug( "Raw data size: {}", rawDataSize );
 
+            // streaming the raw samples
             AudioData payload;
             payload.set_rawdata( reinterpret_cast< char const * >( rawData ), rawDataSize );
-            spdlog::info( "Sending {} bytes, but actual filesize is {}", payload.ByteSizeLong(), song.size_in_bytes() );
+
+            // spdlog::info( "Sending {} bytes, but actual filesize is {}", payload.ByteSizeLong(), song.size_in_bytes() );
             if ( !writer->Write( payload ) )
             {
-                spdlog::error( "Failed to write raw data" );
+                spdlog::error( "Failed to write raw data." );
             }
             else
             {
@@ -132,7 +151,7 @@ namespace audioserver
     void run_server( std::string_view const directory, std::int16_t const port )
     {
         storage_directory = directory;
-        // TODO:
+        // TODO: append given port to the address
         std::string const server_address{ "0.0.0.0:5371" };
 
         audioservice::AudioServiceImpl service;

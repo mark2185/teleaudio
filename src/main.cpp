@@ -19,7 +19,7 @@ int main( int argc, char const * argv[] )
         // std::string const cmd{ "ls" };
         // std::string const reply{ c.RunCmd( cmd, "" ) };
         // spdlog::info( "Received:\n{}", c.RunCmd( "ls", "" ) );
-        // spdlog::info( "Received:\n{}", c.RunCmd( "play", "nonexistant.wav" ) );
+        spdlog::info( "Received:\n{}", c.RunCmd( "play", "nonexistant.wav" ) );
         spdlog::info( "Received:\n{}", c.RunCmd( "play", "AMAZING.wav" ) );
         spdlog::info( "Exiting!" );
     }

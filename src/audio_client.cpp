@@ -5,23 +5,26 @@
 
 namespace audioserver
 {
+    // TODO: cast operator?
     WAV::FmtSubChunk parseMetadata( audioservice::AudioMetadata const metadata )
     {
         return
         {
+            .subchunk1_id    = WAV::MagicBytes::fmt,
             .subchunk1_size  = 16, // fixed
-            .audio_format    = 1,  // PCM
-            .num_channels    = static_cast< std::uint16_t >( metadata.channels() ),
-            .sample_rate     =                             ( metadata.samplerate() ),
+            .audio_format    = 1,  // fixed, denotes PCM
+            .num_channels    = static_cast< std::uint16_t >( metadata.channels()              ),
+            .sample_rate     =                             ( metadata.samplerate()            ),
             .byte_rate       =                             ( metadata.averagebytespersecond() ),
-            .block_align     = static_cast< std::uint16_t >( metadata.blockalign() ),
-            .bits_per_sample = static_cast< std::uint16_t >( metadata.bitspersample() ),
+            .block_align     = static_cast< std::uint16_t >( metadata.blockalign()            ),
+            .bits_per_sample = static_cast< std::uint16_t >( metadata.bitspersample()         )
         };
     }
 
-    using namespace audioservice;
     std::string AudioClient::RunCmd( std::string const & cmd, std::string const & arg )
     {
+        using namespace audioservice;
+
         // Context for the client. It could be used to convey extra information to
         // the server and/or tweak certain RPC behaviors.
         ClientContext context;
@@ -32,7 +35,6 @@ namespace audioserver
             File request;
             request.set_name(arg);
             std::unique_ptr<ClientReader<AudioData> > reader{ stub_->Play( &context, request ) };
-            spdlog::info( "Played audio" );
 
             spdlog::info( "Reading data back" );
             AudioData data;
@@ -56,24 +58,13 @@ namespace audioserver
             if ( status.ok() )
             {
                 auto wavFile{ WAV::constructPlaceholderWaveFile( parseMetadata( metadata ), reinterpret_cast< std::byte * >( const_cast< char * >( data.rawdata().data() ) ), data.rawdata().size() ) };
-                // wavFile.format = parseMetadata( metadata );
-                // spdlog::info( "Metadata: {}", data.mutable_meta()->averagebytespersecond() );
-                auto const output_file{ FileUtils::openFile( "/tmp/asdf.wav", FileUtils::FileOpenMode::WriteBinary ) };
-                if ( !output_file )
+                wavFile.riff.size = metadata.filesize();
+
+                // spdlog::info( "riff size {}, chunk1 size {}, chunk2 size: {}", wavFile.riff.size, wavFile.format.subchunk1_size, wavFile.data.subchunk2_size );
+                spdlog::info( "File size in bytes: {}", wavFile.size_in_bytes() );
+                if ( !wavFile.write( "/home/mark/desktop/asdf.wav" ) )
                 {
-                    spdlog::error( "Cannot open output file" );
-                }
-                else
-                {
-                    auto const res{ std::fwrite( &wavFile, 1, wavFile.size_in_bytes(), output_file.get() ) };
-                    if ( res != wavFile.size_in_bytes() )
-                    {
-                        spdlog::info( "Couldn't write to file, wrote only {} bytes", res );
-                    }
-                    else
-                    {
-                        spdlog::info( "Successfully written {} bytes to /tmp/asdf.wav", wavFile.size_in_bytes() );
-                    }
+                    spdlog::error( "Writing file to file failed" );
                 }
                 return "status is ok";
             }
