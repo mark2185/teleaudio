@@ -56,6 +56,19 @@ namespace audioservice
             return Status::OK;
         }
 
+        AudioMetadata setMetadata( WAV::FmtSubChunk const fmt )
+        {
+            AudioMetadata ret;
+            ret.set_averagebytespersecond( fmt.byte_rate );
+            ret.set_bitspersample        ( fmt.bits_per_sample );
+            ret.set_blockalign           ( fmt.block_align );
+            ret.set_channels             ( fmt.num_channels );
+            // ret.set_extrasize            ( fmt.);
+            ret.set_samplerate           ( fmt.sample_rate);
+
+            return ret;
+        }
+
         Status Play( ServerContext* context, File const * request, ServerWriter< AudioData > * writer ) override
         {
             auto const file{ storage_directory / request->name() };
@@ -84,27 +97,9 @@ namespace audioservice
                 return Status::OK;
             }
 
-            auto const [ id, size, format, n, sample, byte, align, bps ]{ song.format };
-            // spdlog::info( "Fmt: size = {}, format = {}, numChannels = {}, sample_rate = {}, byte_rate = {}, block_align = {}, bps = {}", size, format, n, sample, byte, align, bps );
-            // spdlog::info( "Parsing successful!" );
-
-            // spdlog::info( "Just returning from play" );
-            // AudioMetadata meta;
-
-            AudioData response{};
-            // response.mutable_audiometadata()->set_averagebytespersecond( byte );
-            response.mutable_metadata()->set_averagebytespersecond( byte );
-            // ->set_averagebytespersecond( song.format.byte_rate );
-            // spdlog::info( "Set averagebytespersecond" );
-            // {
-                // .AverageBytesPerSecond = 1,
-                // .BitsPerSample = 2,
-                // .BlockAlign = 3,
-                // .Channels = 4,
-                // .ExtraSize = 5,
-                // .SampleRate = 6,
-            // };
-            // writer->Write( AudioData
+            AudioData response;
+            AudioMetadata md{ setMetadata( song.format ) };
+            *response.mutable_metadata() = md;
             if ( !writer->Write( response ) )
             {
                 spdlog::info( "Write of metadata was not successful, returning" );
@@ -116,10 +111,8 @@ namespace audioservice
             spdlog::info( "Rawdata size: {}", rawDataSize );
 
             AudioData payload;
-            // payload.mutable_rawdata()->assign( reinterpret_cast< char const * >( rawData ), rawDataSize );
-            // payload.set_rawdata( std::string( reinterpret_cast< char const * >( rawData ), rawDataSize ) );
             payload.set_rawdata( reinterpret_cast< char const * >( rawData ), rawDataSize );
-            spdlog::info( "Sending {} bytes", payload.ByteSizeLong() );
+            spdlog::info( "Sending {} bytes, but actual filesize is {}", payload.ByteSizeLong(), song.size_in_bytes() );
             if ( !writer->Write( payload ) )
             {
                 spdlog::error( "Failed to write raw data" );
@@ -131,81 +124,18 @@ namespace audioservice
             return Status::OK;
         }
     };
+
 } // namespace audioservice
 
 namespace audioserver
 {
-    using namespace audioservice;
-    std::string AudioClient::RunCmd( std::string const & cmd, std::string const & arg )
-    {
-        // Context for the client. It could be used to convey extra information to
-        // the server and/or tweak certain RPC behaviors.
-        ClientContext context;
-
-        if ( cmd == "play" )
-        {
-            // Data we are sending to the server.
-            File request;
-            request.set_name(arg);
-            std::unique_ptr<ClientReader<AudioData> > reader{ stub_->Play( &context, request ) };
-            spdlog::info( "Played audio" );
-
-            spdlog::info( "Reading data back" );
-            AudioData data{};
-            reader->Read( &data );
-            spdlog::info( "Read some meta data!" );
-            spdlog::info( "Metadata: {}", data.metadata().averagebytespersecond() );
-
-            spdlog::info( "Starting read loop" );
-            while( reader->Read( &data ) )
-            {
-                spdlog::info( "Read some raw data!" );
-                spdlog::info( "{}", data.rawdata().size() );
-            }
-            spdlog::info( "End of reading loop" );
-
-            Status status = reader->Finish();
-            if ( status.ok() )
-            {
-                // spdlog::info( "Metadata: {}", data.mutable_meta()->averagebytespersecond() );
-                return "status is ok";
-            }
-            else
-            {
-                spdlog::error( "playing failed, nothing to write" );
-                return "playing failed";
-            }
-        }
-        else
-        {
-            // Data we are sending to the server.
-            Command request;
-            request.set_cmd(cmd);
-            request.set_arg(arg);
-
-            // Container for the data we expect from the server.
-            CmdOutput reply;
-
-            // The actual RPC.
-            Status status = stub_->RunCmd(&context, request, &reply);
-
-            // Act upon its status.
-            if (status.ok()) {
-                return reply.message();
-            } else {
-                spdlog::error( "RPC failed: {}", status.error_message().c_str() );
-                return "RPC failed";
-            }
-        }
-    }
-
     void run_server( std::string_view const directory, std::int16_t const port )
     {
         storage_directory = directory;
         // TODO:
         std::string const server_address{ "0.0.0.0:5371" };
 
-        AudioServiceImpl service;
+        audioservice::AudioServiceImpl service;
 
         // grpc::EnableDefaultHealthCheckService(true);
         // grpc::reflection::InitProtoReflectionServerBuilderPlugin();
@@ -225,6 +155,4 @@ namespace audioserver
         // responsible for shutting down the server for this call to ever return.
         server->Wait();
     }
-
-
-} // namespace audioserver
+}
