@@ -90,24 +90,23 @@ class TeleaudioImpl final : public AudioService::Service
 
         // sending the raw data, chunking if bigger than `chunk_size`
 
-        std::uint32_t const chunk_size     { 64 * 1024 }; // 64 KiB
+        std::uint32_t const chunk_size     { 5 * 1024 }; // 5 KiB
         std::uint32_t       byte_offset    { 0U };
         std::uint32_t       bytes_remaining{ song.data.subchunk2_size };
+
+        auto const payload_data{ reinterpret_cast< char const * >( song.data.data.get() ) };
+
+        AudioData rawdata_response;
         while ( bytes_remaining > 0 )
         {
             auto const payload_size{ std::min( bytes_remaining, chunk_size ) };
 
-            AudioData rawdata_response;
-            rawdata_response.set_rawdata( reinterpret_cast< char const * >( song.data.data.get() + byte_offset ), payload_size );
+            rawdata_response.set_rawdata( payload_data + byte_offset, payload_size );
 
             if ( !writer->Write( rawdata_response ) )
             {
                 spdlog::error( "Failed to write raw data." );
                 return grpc::Status::CANCELLED;
-            }
-            else
-            {
-                spdlog::info( "Successfully sent {} bytes of raw data!", payload_size );
             }
 
             bytes_remaining -= payload_size;

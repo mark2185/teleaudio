@@ -64,8 +64,6 @@ namespace Teleaudio
 
         spdlog::info( "Metadata: {}ch {}Hz {}bps", data.metadata().channels(), data.metadata().samplerate(), data.metadata().bitspersample() );
 
-        spdlog::info( "Reading loop now" );
-
         auto const raw_data_size  { static_cast< std::uint32_t >( data.metadata().rawdatasize() ) };
         auto       raw_data_buffer{ std::make_unique< std::byte[] >( raw_data_size )              };
         std::uint32_t bytes_read{};
@@ -73,7 +71,6 @@ namespace Teleaudio
         while ( reader->Read( &data ) )
         {   
             auto const payload_size{ static_cast< std::uint32_t >( data.rawdata().size() ) };
-            spdlog::info( "reading loop, read {} bytes", payload_size );
             std::copy_n
             (
                 reinterpret_cast< std::byte * >( data.mutable_rawdata()->data() ),
@@ -82,7 +79,6 @@ namespace Teleaudio
             );
             bytes_read += payload_size;
         }
-        spdlog::info( "Reading loop ended" );
         if ( bytes_read != raw_data_size )
         {
             spdlog::error( "Read {} bytes, but raw data size is {}", bytes_read, raw_data_size );
