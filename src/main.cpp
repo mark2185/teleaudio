@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 void print_help()
 {
-    spdlog::error( "\nUsage:\n\t$> ./teleaudio server /path/to/wav/files <port>\nOr:\n\t$> ./teleaudio <port>" );
+    spdlog::error( "\nUsage:\n\t$> ./teleaudio server /path/to/wav/files <port>\nOr:\n\t$> ./teleaudio <port> <destination-folder>" );
 }
 
 int run_client( char const * argv [] )
