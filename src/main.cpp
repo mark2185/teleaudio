@@ -72,5 +72,8 @@ int main( int argc, char const * argv[] )
     {
         return run_server( argv );
     }
+
+    print_help();
+
     return 0;
 }
