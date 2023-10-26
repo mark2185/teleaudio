@@ -1,8 +1,9 @@
 #include "audio_client.hpp"
 
 #include <spdlog/spdlog.h>
-#include "wav.hpp"
+
 #include "audio_server.hpp"
+#include "wav.hpp"
 
 namespace
 {
@@ -91,7 +92,7 @@ namespace Teleaudio
             return std::nullopt;
         }
 
-        return std::move( file );
+        return file;
     }
 
 

@@ -51,13 +51,13 @@ namespace Teleaudio
 class TeleaudioImpl final : public AudioService::Service
 {
 
-    grpc::Status List( grpc::ServerContext * context, Directory const * request, CmdOutput * response ) override
+    grpc::Status List( grpc::ServerContext *, Directory const * request, CmdOutput * response ) override
     {
         response->set_text( ls( request->path() ) );
         return grpc::Status::OK;
     }
 
-    grpc::Status Download( grpc::ServerContext * context, File const * request, grpc::ServerWriter< AudioData > * writer ) override
+    grpc::Status Download( grpc::ServerContext *, File const * request, grpc::ServerWriter< AudioData > * writer ) override
     {
         auto const file{ storage_directory / request->name() };
         if ( !fs::exists( file ) )
@@ -107,7 +107,7 @@ class TeleaudioImpl final : public AudioService::Service
         return grpc::Status::OK;
     }
 
-    grpc::Status Play( grpc::ServerContext * context, File const * request, grpc::ServerWriter< AudioData > * writer ) override
+    grpc::Status Play( [[ maybe_unused ]] grpc::ServerContext * context, [[ maybe_unused ]] File const * request, [[ maybe_unused ]] grpc::ServerWriter< AudioData > * writer ) override
     {
         return grpc::Status::OK;
     }
@@ -115,7 +115,7 @@ class TeleaudioImpl final : public AudioService::Service
 }; // class TeleaudioImpl
 
 
-void run_server( std::string_view const directory, std::int16_t const port )
+void run_server( std::string_view const directory, std::uint16_t const port )
 {
     storage_directory = directory;
 

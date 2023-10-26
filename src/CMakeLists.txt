@@ -7,7 +7,11 @@ find_package( spdlog   REQUIRED )
 
 set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/audio_server.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/audio_server.hpp
     ${CMAKE_CURRENT_LIST_DIR}/audio_client.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/audio_client.hpp
+    ${CMAKE_CURRENT_LIST_DIR}/wav.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/wav.hpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
 

@@ -12,7 +12,7 @@ void print_help()
     spdlog::error( "\nUsage:\n\t$> ./teleaudio server /path/to/wav/files <port>\nOr:\n\t$> ./teleaudio <port>" );
 }
 
-int run_client( int argc, char const * argv [] )
+int run_client( int, char const * argv [] )
 {
     std::string const port_arg{ argv[ 1 ] };
     int port;
@@ -50,7 +50,7 @@ int run_server( int argc, char const * argv [] )
 
     int port;
     std::from_chars( port_arg.data(), port_arg.data() + port_arg.size(), port );
-    Teleaudio::run_server( storage, port );
+    Teleaudio::run_server( storage, static_cast< std::uint16_t >( port ) );
 
     return 0;
 }
