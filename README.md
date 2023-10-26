@@ -48,7 +48,8 @@ $> ./locally-built/bin/teleaudio <local_port> <output_dir>
 
 ... or mount a `downloads` output directory and tell the client to save there:
 ```bash
-$> docker run --rm -u$(id -u):$(id -g) --init -v/path/to/local/folder:/output teleaudio /output 1989
+$> docker run --rm -u$(id -u):$(id -g) --network host -v/path/to/local/folder:/output teleaudio <local_port_from_above> /output
 ```
 
 *Note: the `-u` flag is so the owner of the output file isn't `root`*
+*Note: using `--network host` is needed to access the container running the server.*
