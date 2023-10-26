@@ -40,14 +40,15 @@ add_executable( ${target} ${SOURCES} )
 
 # gRPC depends on systemd if it can find it, can't turn it off
 # Source: https://github.com/grpc/grpc/pull/34384
-# that means we can't build statically since systemd cannot be linked statically
+# that means we can't build statically if systemd is found, since it cannot be linked statically
 find_library( SYSTEMD_LIB systemd )
 
 # generator expression $<$<BOOL:SYSTEMD_LIB>:systemd> doesn't work for some reason
 if ( NOT SYSTEMD_LIB )
-    target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto         )
+    # building statically when we can (i.e. docker)
+    target_link_libraries( ${target} PRIVATE -static spdlog::spdlog myproto         )
 else()
-    target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto systemd )
+    target_link_libraries( ${target} PRIVATE         spdlog::spdlog myproto systemd )
 endif()
 
 set_target_properties(
