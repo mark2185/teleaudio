@@ -153,7 +153,7 @@ namespace WAV
             auto const res{ std::fwrite( data.data.get(), 1, data.subchunk2_size, file_handle.get() ) };
             if ( res != data.subchunk2_size )
             {
-                spdlog::error( "Failed writing the raw audio data, written {} bytes, but should have written {}.", res );
+                spdlog::error( "Failed writing the raw audio data, written {} bytes, but should have written {}.", res, data.subchunk2_size );
                 return false;
             }
             total_bytes_written += res;
