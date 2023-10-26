@@ -35,12 +35,11 @@ namespace
     [[ nodiscard ]] Teleaudio::AudioMetadata setMetadata( WAV::FmtSubChunk const fmt )
     {
         Teleaudio::AudioMetadata ret;
-        ret.set_averagebytespersecond( fmt.byte_rate );
+        ret.set_averagebytespersecond( fmt.byte_rate       );
         ret.set_bitspersample        ( fmt.bits_per_sample );
-        ret.set_blockalign           ( fmt.block_align );
-        ret.set_channels             ( fmt.num_channels );
-        // ret.set_extrasize            ( fmt.);
-        ret.set_samplerate           ( fmt.sample_rate);
+        ret.set_blockalign           ( fmt.block_align     );
+        ret.set_channels             ( fmt.num_channels    );
+        ret.set_samplerate           ( fmt.sample_rate     );
 
         return ret;
     }
@@ -67,7 +66,7 @@ class TeleaudioImpl final : public AudioService::Service
             return grpc::Status::OK;
         }
 
-        WAV::File const song{ file.string() };
+        WAV::File song{ file.string() };
         if ( !song.valid() )
         {
             // TODO: there are 40 bytes extra in the file AWESOME.wav somewhere
@@ -78,32 +77,31 @@ class TeleaudioImpl final : public AudioService::Service
 
         // sending metadata first
         AudioMetadata metadata{ setMetadata( song.format ) };
-        // TODO: maybe a cast operator
         metadata.set_filesize( song.size_in_bytes() );
 
-        AudioData response;
-        *response.mutable_metadata() = metadata;
+        AudioData metadata_response;
+        *metadata_response.mutable_metadata() = metadata;
 
-        if ( !writer->Write( response ) )
+        if ( !writer->Write( metadata_response ) )
         {
             spdlog::error( "Sending metadata failed, exiting" );
             return grpc::Status::OK;
         }
 
-        auto const rawData{ song.data.data };
+        // sending the raw data
+        // auto       rawData{ song.data.data.release() };
         auto const rawDataSize{ song.data.subchunk2_size };
 
-        // streaming the raw samples
-        AudioData payload;
-        payload.set_rawdata( reinterpret_cast< char const * >( rawData ), rawDataSize );
+        AudioData rawdata_response;
+        rawdata_response.set_rawdata( reinterpret_cast< char const * >( song.data.data.get() ), rawDataSize );
 
-        if ( !writer->Write( payload ) )
+        if ( !writer->Write( rawdata_response ) )
         {
             spdlog::error( "Failed to write raw data." );
         }
         else
         {
-            spdlog::info( "Successfully sent raw data!" );
+            spdlog::info( "Successfully sent {} bytes of raw data!", rawDataSize );
         }
 
         return grpc::Status::OK;

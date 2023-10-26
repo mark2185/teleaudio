@@ -6,7 +6,6 @@
 
 namespace Teleaudio
 {
-    // TODO: cast operator?
     WAV::FmtSubChunk parseMetadata( AudioMetadata const metadata )
     {
         return
@@ -21,82 +20,6 @@ namespace Teleaudio
             .bits_per_sample = static_cast< std::uint16_t >( metadata.bitspersample()         )
         };
     }
-
-    // std::string AudioClient::RunCmd( std::string const & cmd, std::string const & arg )
-    // {
-        // using namespace audioservice;
-
-        // Context for the client. It could be used to convey extra information to
-        // the server and/or tweak certain RPC behaviors.
-        // ClientContext context;
-
-        // if ( cmd == "play" )
-        // {
-            // // Data we are sending to the server.
-            // File request;
-            // request.set_name(arg);
-            // std::unique_ptr<ClientReader<AudioData> > reader{ stub_->Play( &context, request ) };
-
-            // spdlog::info( "Reading data back" );
-            // AudioData data;
-            // reader->Read( &data );
-            // spdlog::info( "Metadata: {}, {}, {}", 
-                    // data.metadata().averagebytespersecond(),
-                    // data.metadata().bitspersample(),
-                    // data.metadata().channels());
-
-            // auto const metadata{ data.metadata() };
-
-            // spdlog::info( "Starting read loop" );
-            // while( reader->Read( &data ) )
-            // {
-                // spdlog::info( "Read some raw data!" );
-                // spdlog::info( "{}", data.rawdata().size() );
-            // }
-            // spdlog::info( "End of reading loop" );
-
-            // Status status = reader->Finish();
-            // if ( status.ok() )
-            // {
-                // auto wavFile{ WAV::constructPlaceholderWaveFile( parseMetadata( metadata ), reinterpret_cast< std::byte * >( const_cast< char * >( data.rawdata().data() ) ), data.rawdata().size() ) };
-                // wavFile.riff.size = metadata.filesize();
-
-                // // spdlog::info( "riff size {}, chunk1 size {}, chunk2 size: {}", wavFile.riff.size, wavFile.format.subchunk1_size, wavFile.data.subchunk2_size );
-                // spdlog::info( "File size in bytes: {}", wavFile.size_in_bytes() );
-                // if ( !wavFile.write( "/home/mark/desktop/asdf.wav" ) )
-                // {
-                    // spdlog::error( "Writing file to file failed" );
-                // }
-                // return "status is ok";
-            // }
-            // else
-            // {
-                // spdlog::error( "playing failed, nothing to write" );
-                // return "playing failed";
-            // }
-        // }
-        // else
-        // {
-            // // Data we are sending to the server.
-            // Command request;
-            // request.set_cmd(cmd);
-            // request.set_arg(arg);
-
-            // // Container for the data we expect from the server.
-            // CmdOutput reply;
-
-            // // The actual RPC.
-            // Status status = stub_->RunCmd(&context, request, &reply);
-
-            // // Act upon its status.
-            // if (status.ok()) {
-                // return reply.message();
-            // } else {
-                // spdlog::error( "RPC failed: {}", status.error_message().c_str() );
-                // return "RPC failed";
-            // }
-        // }
-    // }
 
     std::string AudioClient::List( std::string_view const directory ) const
     {
@@ -132,8 +55,7 @@ namespace Teleaudio
         AudioData data;
         reader->Read( &data );
 
-        // auto const channels{ data.metadata().channels() };
-        spdlog::info( "Playing: {} (bps: {}, channels: {}, size: {}", file, 1, 2, 3 ); // TODO
+        spdlog::info( "Metadata: {}ch {}Hz {}bps", data.metadata().channels(), data.metadata().samplerate(), data.metadata().bitspersample() );
 
         auto const metadata{ data.metadata() };
 
@@ -169,6 +91,8 @@ namespace Teleaudio
 
         auto const metadata{ data.metadata() };
 
+        spdlog::info( "Metadata: {}ch {}Hz {}bps", data.metadata().channels(), data.metadata().samplerate(), data.metadata().bitspersample() );
+
         // reading the raw audio data
         while ( reader->Read( &data ) )
         {
@@ -183,26 +107,31 @@ namespace Teleaudio
             return false;
         }
 
-        auto wavFile
+        auto * rawdata{ data.release_rawdata() };
+
+        WAV::File wavFile
         {
-            WAV::constructPlaceholderWaveFile
-            (
-                parseMetadata( metadata ),
-                reinterpret_cast< std::byte * >( const_cast< char * >( data.rawdata().data() ) ),
-                data.rawdata().size()
-            )
+            parseMetadata( metadata ),
+            reinterpret_cast< std::byte * >( rawdata->data() ), // takes ownership
+            static_cast< std::uint32_t >( rawdata->size() )
         };
-        wavFile.riff.size = metadata.filesize();
+        // wavFile.riff.size = metadata.filesize();
+
+        if ( !wavFile.valid() )
+        {
+            spdlog::error( "Received file is not valid!" );
+            return false;
+        }
 
         if ( !wavFile.write( output_path ) )
         {
             spdlog::error( "Writing file to file failed" );
             return false;
         }
-        else
-        {
-            spdlog::info( "Written {} bytes to '{}'", wavFile.size_in_bytes(), output_path );
-        }
+        // else
+        // {
+            // spdlog::info( "Written {} bytes to '{}'", wavFile.size_in_bytes(), output_path );
+        // }
         return true;
     }
 } // namespace Teleaudio

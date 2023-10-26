@@ -9,13 +9,16 @@
 
 void print_help()
 {
-    spdlog::error( "\nUsage:\n\t$> ./teleaudio server /path/to/wav/files <port>\nOr:\n\t$> ./teleaudio" );
+    spdlog::error( "\nUsage:\n\t$> ./teleaudio server /path/to/wav/files <port>\nOr:\n\t$> ./teleaudio <port>" );
 }
 
 int run_client( int argc, char const * argv [] )
 {
-    run_client( argc, argv );
-    Teleaudio::AudioClient c{ grpc::CreateChannel("localhost:5371", grpc::InsecureChannelCredentials()) };
+    std::string const port_arg{ argv[ 1 ] };
+    int port;
+    std::from_chars( port_arg.data(), port_arg.data() + port_arg.size(), port );
+
+    Teleaudio::AudioClient c{ grpc::CreateChannel("localhost:" + std::to_string( port ), grpc::InsecureChannelCredentials()) };
 
     spdlog::info( "ls\n{}", c.List() );
 
@@ -24,8 +27,8 @@ int run_client( int argc, char const * argv [] )
     // {
         // spdlog::error( "Something went wrong with cmd 'play AMAZING.wav'" );
     // }
-    spdlog::info( "download AMAZING_clean.wav /tmp/amazing.wav" );
-    if ( !c.Download( "AMAZING_clean.wav", "/tmp/amazing.wav" ) )
+    spdlog::info( "download AMAZING_clean.wav /tmp/amazing_clean.wav" );
+    if ( !c.Download( "AMAZING_clean.wav", "/tmp/amazing_clean.wav" ) )
     {
         spdlog::error( "Something went wrong with cmd 'download AMAZING.wav /tmp/amazing.wav'" );
     }
@@ -54,7 +57,7 @@ int run_server( int argc, char const * argv [] )
 
 int main( int argc, char const * argv[] )
 {
-    if ( argc == 1 )
+    if ( argc == 2 )
     {
         return run_client( argc, argv );
     }
