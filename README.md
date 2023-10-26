@@ -11,9 +11,13 @@ Build the image with `docker build -t teleaudio .`
 Mount the directory where the `.wav` files are to `/audio` and the server will listen on port `1989` by default.
 
 ```bash
-$> docker run --rm -p<local_port>:1989 -v/path/to/wav/files:/audio teleaudio
-$> ./build/bin/teleaudio <local_port>
+$> docker run --rm --init -p<local_port>:1989 teleaudio
+[2023-10-26 00:00:00.123] Server listening on 0.0.0.0:1989
+$> # in another shell
+$> ./build/bin/teleaudio <local_port> <output_dir>
 ```
+
+*Note: the `--init` flag is necessary for `<ctrl+c>` to shut the server down.*
 
 
 ### Manually

@@ -65,7 +65,6 @@ namespace Teleaudio
         // reading the raw audio data
         while ( reader->Read( &data ) )
         {
-            spdlog::info( "Reading loop" );
             // TODO: test with a huge file
         }
 
