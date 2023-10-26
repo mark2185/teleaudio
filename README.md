@@ -2,31 +2,36 @@
 
 Listening to audio through the magic of internet.
 
-### Build
+## Build
 
-#### Docker variant
+### Docker variant
 
-Build the image with `docker build -t teleaudio-image .`
+Build the image with `docker build -t teleaudio .`
 
 Mount the directory where the `.wav` files are to `/audio` and the server will listen on port `1989` by default.
 
 ```bash
-$> docker run --rm -v/path/to/wav/files:/audio teleaudio-image
+$> docker run --rm -p<local_port>:1989 -v/path/to/wav/files:/audio teleaudio
+$> ./build/bin/teleaudio <local_port>
 ```
 
 
-#### Manually
+### Manually
 
-Note: `conan` is required package management
+#### Linux
+
+Note: `conan` and `ninja` packages are required.
+
 ```bash
 $> conan profile detect
-$> conan install .
-$> cmake -S . -B build
-$> cmake --build build
-$> cd build/bin
-$> teleaudio -d
-Teleaudio server launching...
+$> conan install . --output-folder=build --build=missing
+$> cd build
+$> cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release ../
+$> cmake --build .
+$> ./bin/teleaudio server <directory-to-wavs> <port>
+Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
-$> teleaudio ls
-$> teleaudio play <filename>
+$> ./bin/teleaudio <port>
 ```
+
+#### Windows
