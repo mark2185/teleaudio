@@ -28,7 +28,7 @@ $> conan install . --output-folder=build --build=missing
 $> cd build
 $> cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release ../
 $> cmake --build .
-$> ./bin/teleaudio server <directory-to-wavs> <port>
+$> ./bin/teleaudio server ../test/storage/clean_wavs/ <port>
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
 $> ./bin/teleaudio <port>
