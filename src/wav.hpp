@@ -10,12 +10,12 @@
 
 namespace WAV
 {
-struct MagicBytes
+namespace MagicBytes
 {
-    static constexpr std::array< std::byte, 4 > RIFF = { std::byte{ 0x52 }, std::byte{ 0x49 }, std::byte{ 0x46 }, std::byte{ 0x46 } };
-    static constexpr std::array< std::byte, 4 > WAVE = { std::byte{ 0x57 }, std::byte{ 0x41 }, std::byte{ 0x56 }, std::byte{ 0x45 } };
-    static constexpr std::array< std::byte, 4 > fmt  = { std::byte{ 0x66 }, std::byte{ 0x6d }, std::byte{ 0x74 }, std::byte{ 0x20 } };
-    static constexpr std::array< std::byte, 4 > data = { std::byte{ 0x64 }, std::byte{ 0x61 }, std::byte{ 0x74 }, std::byte{ 0x61 } };
+    inline constexpr std::array< std::byte, 4 > RIFF = { std::byte{ 0x52 }, std::byte{ 0x49 }, std::byte{ 0x46 }, std::byte{ 0x46 } };
+    inline constexpr std::array< std::byte, 4 > WAVE = { std::byte{ 0x57 }, std::byte{ 0x41 }, std::byte{ 0x56 }, std::byte{ 0x45 } };
+    inline constexpr std::array< std::byte, 4 > fmt  = { std::byte{ 0x66 }, std::byte{ 0x6d }, std::byte{ 0x74 }, std::byte{ 0x20 } };
+    inline constexpr std::array< std::byte, 4 > data = { std::byte{ 0x64 }, std::byte{ 0x61 }, std::byte{ 0x74 }, std::byte{ 0x61 } };
 };
 
 
@@ -43,7 +43,7 @@ struct RiffChunk
         format = MagicBytes::WAVE;
     }
 
-} __attribute__((packed));
+} /*__attribute__((packed))*/; // TODO: this prevents spdlog from pritning `size`
 
 struct FmtSubChunk
 {
@@ -119,6 +119,26 @@ struct File
     // File          ( File const & ) = delete;
     // File operator=( File const & ) = delete;
 
+    // spdlog::info( "riff size {}, chunk1 size {}, chunk2 size: {}", song.riff.size, song.format.subchunk1_size, song.data.subchunk2_size );
+    // spdlog::info( "File size in bytes: {}", song.size_in_bytes() );
+    // if ( !song.valid() )
+    // {
+        // if ( !song.riff.valid() )
+        // {
+            // spdlog::error( "RIFF not valid!" );
+        // }
+        // if ( !song.format.valid() )
+        // {
+            // spdlog::error( "Format not valid!" );
+        // }
+        // if ( !song.data.valid() )
+        // {
+            // spdlog::error( "Data not valid!" );
+        // }
+        // spdlog::error( "Failed to open song '{}'", file.string() );
+        // return Status::OK;
+    // }
+
     File() = default;
 
     File( std::string_view const filename )
@@ -165,9 +185,10 @@ struct File
             }
             data.data = buffer.release();
         }
-        if ( size_in_bytes() != riff.size )
+        if ( riff.size != ( 4 + ( 8 + format.subchunk1_size ) + ( 8 + data.subchunk2_size ) ) )
         {
             spdlog::error( "Header does not match the math" );
+            spdlog::error( "{} vs {}", riff.size, ( 4 + ( 8 + format.subchunk1_size ) + ( 8 + data.subchunk2_size ) ) );
         }
     }
 
@@ -219,7 +240,7 @@ struct File
 
         return true;
     }
-} __attribute__((packed)); // TODO: msvc
+} /*__attribute__((packed))*/; // TODO: msvc
 
 inline File constructPlaceholderWaveFile( FmtSubChunk const metadata, std::byte * rawData, std::uint32_t size )
 {

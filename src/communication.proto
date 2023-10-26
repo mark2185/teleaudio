@@ -1,5 +1,4 @@
 syntax = "proto3";
-import "google/protobuf/empty.proto";
 
 package Teleaudio;
 
@@ -7,21 +6,10 @@ service AudioService {
     rpc List     (Directory) returns (CmdOutput);
     rpc Play     (File)      returns (stream AudioData);
     rpc Download (File)      returns (stream AudioData);
-
-    rpc RunCmd (Command) returns (CmdOutput);
-    rpc GetAudioMetadata (File) returns (AudioMetadata);
-    rpc StreamAudio (google.protobuf.Empty) returns (stream AudioData);
 }
 
 message Directory {
     string path = 1;
-}
-
-message Command {
-    // Command to be run
-    string cmd = 1;
-    // Optional arg
-    string arg = 2;
 }
 
 message File {
@@ -37,9 +25,8 @@ message AudioMetadata {
   uint32 BitsPerSample = 2;
   uint32 BlockAlign = 3;
   uint32 Channels = 4;
-  uint32 ExtraSize = 5;
-  uint32 SampleRate = 6;
-  uint32 FileSize = 7;
+  uint32 SampleRate = 5;
+  uint32 FileSize = 6;
 }
 
 message AudioData {

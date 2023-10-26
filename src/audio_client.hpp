@@ -15,10 +15,13 @@ public:
         : stub_{ AudioService::NewStub( channel ) }
     {}
 
-    // Takes an optional directory as an argument
+    // Print out the contents of a directory
     [[ nodiscard ]] std::string List     ( std::string_view directory = "." ) const;
 
+    // Play the file on an audio device
     [[ nodiscard ]] bool Play     ( std::string_view file                               ) const;
+
+    // Download the file
     [[ nodiscard ]] bool Download ( std::string_view file, std::string_view output_path ) const;
 
 private:

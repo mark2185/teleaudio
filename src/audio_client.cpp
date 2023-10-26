@@ -103,7 +103,7 @@ namespace Teleaudio
         grpc::ClientContext context;
 
         Directory request;
-        request.set_path( directory.data() );
+        request.set_path( std::string{ directory } );
 
         CmdOutput response;
 
@@ -161,20 +161,18 @@ namespace Teleaudio
         File request;
         request.set_name( file.data() );
 
-        std::unique_ptr< grpc::ClientReader< AudioData > > reader{ stub_->Play( &context, request ) };
+        std::unique_ptr< grpc::ClientReader< AudioData > > reader{ stub_->Download( &context, request ) };
 
         // reading metadata first
         AudioData data;
         reader->Read( &data );
-
-        // auto const channels{ data.metadata().channels() };
-        spdlog::info( "Playing: {} (bps: {}, channels: {}, size: {}", file, 1, 2, 3 ); // TODO take MPV as inspiration for the necessary data
 
         auto const metadata{ data.metadata() };
 
         // reading the raw audio data
         while ( reader->Read( &data ) )
         {
+            spdlog::info( "Reading loop" );
             // TODO: test with a huge file
         }
 
@@ -200,6 +198,10 @@ namespace Teleaudio
         {
             spdlog::error( "Writing file to file failed" );
             return false;
+        }
+        else
+        {
+            spdlog::info( "Written {} bytes to '{}'", wavFile.size_in_bytes(), output_path );
         }
         return true;
     }
