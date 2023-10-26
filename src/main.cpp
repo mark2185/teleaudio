@@ -25,17 +25,20 @@ int run_client( char const * argv [] )
 
     auto const output_directory{ argv[ 2 ] };
 
-    spdlog::info( "ls\n{}", c.List() );
+    // spdlog::info( "ls\n{}", c.List() );
 
-    spdlog::info( "play AMAZING_clean.wav" );
-    if ( !c.Play( "AMAZING_clean.wav" ) )
+    auto const song_name{ "AMAZING_clean.wav" };
+
+    // spdlog::info( "play {}", song_name );
+    // if ( !c.Play( song_name ) )
+    // {
+        // spdlog::error( "Something went wrong with cmd 'play {}'", song_name );
+    // }
+    spdlog::info( "download {} {}/{}", song_name, output_directory, song_name );
+    auto const output_path{ fs::path{ output_directory } / song_name };
+    if ( !c.Download( song_name, output_path.string() ) )
     {
-        spdlog::error( "Something went wrong with cmd 'play AMAZING.wav'" );
-    }
-    spdlog::info( "download AMAZING_clean.wav {}/amazing_clean.wav", output_directory );
-    if ( !c.Download( "AMAZING_clean.wav", ( fs::path{ output_directory } / "amazing_clean.wav" ).string() ) )
-    {
-        spdlog::error( "Something went wrong with cmd 'download AMAZING.wav /tmp/amazing.wav'" );
+        spdlog::error( "Something went wrong with cmd 'download {} {}'", song_name, output_path.string() );
     }
     spdlog::info( "Exiting!" );
     return 0;

@@ -9,11 +9,13 @@ namespace
 {
     WAV::FmtSubChunk parseMetadata( Teleaudio::AudioMetadata const metadata )
     {
+        auto const pulse_code_modulation{ 1 };
+        auto const pulse_code_modulation_chunk_size{ 16 };
         return
         {
             .subchunk1_id    = WAV::MagicBytes::fmt,
-            .subchunk1_size  = 16, // fixed
-            .audio_format    = 1,  // fixed, denotes PCM
+            .subchunk1_size  = pulse_code_modulation_chunk_size,
+            .audio_format    = pulse_code_modulation,
             .num_channels    = static_cast< std::uint16_t >( metadata.channels()              ),
             .sample_rate     =                             ( metadata.samplerate()            ),
             .byte_rate       =                             ( metadata.averagebytespersecond() ),
@@ -62,10 +64,28 @@ namespace Teleaudio
 
         spdlog::info( "Metadata: {}ch {}Hz {}bps", data.metadata().channels(), data.metadata().samplerate(), data.metadata().bitspersample() );
 
+        spdlog::info( "Reading loop now" );
+
+        auto const raw_data_size  { static_cast< std::uint32_t >( data.metadata().rawdatasize() ) };
+        auto       raw_data_buffer{ std::make_unique< std::byte[] >( raw_data_size )              };
+        std::uint32_t bytes_read{};
         // reading the raw audio data
         while ( reader->Read( &data ) )
+        {   
+            auto const payload_size{ static_cast< std::uint32_t >( data.rawdata().size() ) };
+            spdlog::info( "reading loop, read {} bytes", payload_size );
+            std::copy_n
+            (
+                reinterpret_cast< std::byte * >( data.mutable_rawdata()->data() ),
+                payload_size,
+                raw_data_buffer.get() + bytes_read
+            );
+            bytes_read += payload_size;
+        }
+        spdlog::info( "Reading loop ended" );
+        if ( bytes_read != raw_data_size )
         {
-            // TODO: test with a huge file
+            spdlog::error( "Read {} bytes, but raw data size is {}", bytes_read, raw_data_size );
         }
 
         grpc::Status const status{ reader->Finish() };
@@ -75,15 +95,14 @@ namespace Teleaudio
             return std::nullopt;
         }
 
-        auto * rawdata{ data.release_rawdata() };
+        auto * rawdata{ raw_data_buffer.release() };
 
         WAV::File file
         {
             parseMetadata( metadata ),
-            reinterpret_cast< std::byte * >( rawdata->data() ), // takes ownership
-            static_cast< std::uint32_t >( rawdata->size() )
+            rawdata, // takes ownership
+            raw_data_size
         };
-        // wavFile.riff.size = metadata.filesize();
 
         if ( !file.valid() )
         {
