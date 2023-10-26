@@ -77,7 +77,7 @@ class TeleaudioImpl final : public AudioService::Service
 
         // sending metadata first
         AudioMetadata metadata{ setMetadata( song.format ) };
-        // metadata.set_filesize( song.size_in_bytes() );
+        metadata.set_rawdatasize( song.data.subchunk2_size );
 
         AudioData metadata_response;
         *metadata_response.mutable_metadata() = metadata;
