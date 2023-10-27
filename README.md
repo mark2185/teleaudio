@@ -38,10 +38,10 @@ $> conan profile detect
 $> conan install . --output-folder=build --build=missing
 $> cmake --preset conan-release
 $> cmake --build --preset conan-release
-$> .\build\build\bin\teleaudio server test\storage\clean_wavs\ <port>
+$> .\build\build\bin\Release\teleaudio server test\storage\clean_wavs\ <port>
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
-$> .\build\build\bin\teleaudio <output-directory> <port>
+$> .\build\build\bin\Release\teleaudio <output-directory> <port>
 ```
 ### Docker variant
 

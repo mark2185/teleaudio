@@ -118,7 +118,7 @@ namespace WAV
 
     bool File::write( std::string_view const path ) const
     {
-        auto total_bytes_written{ 0UL };
+        std::uint64_t total_bytes_written{};
 
         auto const file_handle{ FileUtils::openFile( path, FileUtils::FileOpenMode::WriteBinary ) };
         if ( !file_handle )

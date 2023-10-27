@@ -7,7 +7,7 @@
 #include "communication.grpc.pb.h"
 
 // fwd
-namespace WAV { class File; };
+namespace WAV { struct File; };
 
 namespace Teleaudio
 {

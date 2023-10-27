@@ -5,6 +5,8 @@
 #include "audio_server.hpp"
 #include "wav.hpp"
 
+#include "utils.hpp"
+
 #ifdef _WIN32
 #include <Windows.h>
 #include <MMSystem.h>
@@ -128,8 +130,16 @@ namespace Teleaudio
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
         }
 #ifdef _WIN32
-        PlaySound( *wav_file, NULL, SND_MEMORY | SND_NODEFAULT | SND_SYNC );
-        // TODO: actually play the file
+		// WAV::File song{ "C:\\Users\\Quickemu\\Desktop\\song1.wav" };
+		auto fp{ FileUtils::openFile( "C:\\Users\\Quickemu\\Desktop\\song1.wav", FileUtils::FileOpenMode::ReadBinary ) };
+		auto buffer{ std::make_unique< char [] >( 35422924 ) };
+		std::fread( buffer.get(), 1, 35422924, fp.get() );
+        auto const status{ PlaySound( reinterpret_cast< char * >( buffer.get() ), NULL, SND_MEMORY | SND_SYNC ) };
+		//if ( !song.valid() ) { spdlog::error( "Song not valid" ); }
+		if ( !status )
+		{
+		    spdlog::error( "Failed to play sound for some reason" );
+		}
 #endif
         return true;
     }
