@@ -14,11 +14,11 @@ find_package( spdlog   REQUIRED )
 
 set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/audio_server.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/audio_server.hpp
+    ${PROJECT_SOURCE_DIR}/include/audio_server.hpp
     ${CMAKE_CURRENT_LIST_DIR}/audio_client.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/audio_client.hpp
+    ${PROJECT_SOURCE_DIR}/include/audio_client.hpp
     ${CMAKE_CURRENT_LIST_DIR}/wav.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/wav.hpp
+    ${PROJECT_SOURCE_DIR}/include/wav.hpp
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
 
@@ -65,5 +65,5 @@ set_target_properties(
     teleaudio
     PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    INCLUDE_DIRECTORIES      "${CMAKE_BINARY_DIR}/src"
+    INCLUDE_DIRECTORIES      "${PROJECT_SOURCE_DIR}/include"
 )

@@ -8,6 +8,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include "utils.hpp"
+
 namespace WAV
 {
 namespace MagicBytes
@@ -16,19 +18,6 @@ namespace MagicBytes
     inline constexpr std::array< std::byte, 4 > WAVE = { std::byte{ 0x57 }, std::byte{ 0x41 }, std::byte{ 0x56 }, std::byte{ 0x45 } };
     inline constexpr std::array< std::byte, 4 > fmt  = { std::byte{ 0x66 }, std::byte{ 0x6d }, std::byte{ 0x74 }, std::byte{ 0x20 } };
     inline constexpr std::array< std::byte, 4 > data = { std::byte{ 0x64 }, std::byte{ 0x61 }, std::byte{ 0x74 }, std::byte{ 0x61 } };
-};
-
-struct OwningBuffer
-{
-    std::unique_ptr< std::byte[] > data;
-    std::size_t                    size;
-
-    OwningBuffer( std::size_t const size )
-        : data{ std::make_unique< std::byte[] >( size ) }, size{ size }
-    {}
-
-    std::byte       * get()       { return data.get(); }
-    std::byte const * get() const { return data.get(); }
 };
 
 struct RiffChunk
@@ -116,19 +105,7 @@ struct File
     [[ nodiscard ]] bool write( std::string_view const path ) const;
 
     // Layouts the file in memory as it would be when written onto a disk
-    OwningBuffer copyInMemory() const
-    {
-        OwningBuffer buffer{ size_in_bytes() };
-
-        auto output_iterator{ buffer.get() };
-
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &riff           ), sizeof( riff   )                                           , output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &format         ), sizeof( format )                                           , output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &data           ), sizeof( data.subchunk2_id ) + sizeof( data.subchunk2_size ), output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( data.data.get() ), data.subchunk2_size                                        , output_iterator );
-
-        return buffer;
-    }
+    Utils::OwningBuffer copyInMemory() const;
 };
 
 } // namespace WAV

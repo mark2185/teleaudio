@@ -37,4 +37,21 @@ namespace FileUtils
             &std::fclose
         };
     }
-} // namespace Utils
+} // namespace FileUtils
+
+namespace Utils
+{
+    struct OwningBuffer
+    {
+        std::unique_ptr< std::byte[] > data;
+        std::size_t                    size;
+
+        OwningBuffer( std::size_t const size )
+            : data{ std::make_unique< std::byte[] >( size ) }, size{ size }
+        {}
+
+        std::byte       * get()       { return data.get(); }
+        std::byte const * get() const { return data.get(); }
+    };
+
+}

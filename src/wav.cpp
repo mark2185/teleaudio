@@ -142,4 +142,18 @@ namespace WAV
         return true;
     }
 
+    Utils::OwningBuffer File::copyInMemory() const
+    {
+        Utils::OwningBuffer buffer{ size_in_bytes() };
+
+        auto output_iterator{ buffer.get() };
+
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &riff           ), sizeof( riff   )                                           , output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &format         ), sizeof( format )                                           , output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &data           ), sizeof( data.subchunk2_id ) + sizeof( data.subchunk2_size ), output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( data.data.get() ), data.subchunk2_size                                        , output_iterator );
+
+        return buffer;
+    }
+
 } // namespace WAV
