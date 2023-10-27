@@ -130,7 +130,7 @@ namespace Teleaudio
         {
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
         }
-        auto const buffer{ wav_file->constructInMemory() };
+        auto const buffer{ wav_file->copyInMemory() };
         auto const status{ PlaySound( reinterpret_cast< char * >( buffer.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
         if ( !status )
         {
