@@ -27,14 +27,6 @@ int run_client( char const * argv [] )
 
     spdlog::info( "ls\n{}", c.List() );
 
-    auto const song_name{ "song1.wav" };
-
-    spdlog::info( "play {}", song_name );
-    if ( !c.Play( song_name ) )
-    {
-        spdlog::error( "Something went wrong with cmd 'play {}'", song_name );
-    }
-
     // download small file
     {
         auto const song_name{ "AMAZING_clean.wav" };
@@ -56,6 +48,18 @@ int run_client( char const * argv [] )
             spdlog::error( "Something went wrong with cmd 'download {} {}'", song_name, output_path.string() );
         }
     }
+
+    // play a song
+    {
+        auto const song_name{ "song1.wav" };
+
+        spdlog::info( "play {}", song_name );
+        if ( !c.Play( song_name ) )
+        {
+            spdlog::error( "Something went wrong with cmd 'play {}'", song_name );
+        }
+    }
+
     spdlog::info( "Exiting!" );
     return 0;
 }

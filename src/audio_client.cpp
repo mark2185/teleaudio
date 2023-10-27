@@ -5,6 +5,11 @@
 #include "audio_server.hpp"
 #include "wav.hpp"
 
+#ifdef _WIN32
+#include <Windows.h>
+#include <MMSystem.h>
+#endif
+
 namespace
 {
     WAV::FmtSubChunk parseMetadata( Teleaudio::AudioMetadata const metadata )
@@ -117,7 +122,15 @@ namespace Teleaudio
         {
             return false;
         }
+
+        if ( !wav_file->valid() )
+        {
+            spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
+        }
+#ifdef _WIN32
+        PlaySound( *wav_file, NULL, SND_MEMORY | SND_NODEFAULT | SND_SYNC );
         // TODO: actually play the file
+#endif
         return true;
     }
 
@@ -130,7 +143,7 @@ namespace Teleaudio
         }
         if ( !wav_file->write( output_path ) )
         {
-            spdlog::error( "Writing file to file failed" );
+            spdlog::error( "Writing file to {} failed", output_path );
             return false;
         }
         return true;
