@@ -14,7 +14,7 @@ COPY . /code
 RUN cmake -S /code -B /build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake && \
     cmake --build /build
 
-FROM alpine:3.18.4
+FROM ubuntu:22.04
 
 COPY --from=builder /build/bin/teleaudio /usr/local/bin/
 
