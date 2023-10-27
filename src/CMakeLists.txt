@@ -22,8 +22,13 @@ set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/main.cpp
 )
 
+set( PROTO_DIR
+    ${PROJECT_SOURCE_DIR}/proto
+)
+
 set( PROTO_SOURCES
-    ${CMAKE_CURRENT_LIST_DIR}/communication.proto)
+    ${PROTO_DIR}/communication.proto
+)
 
 add_library( myproto STATIC ${PROTO_SOURCES} )
 target_link_libraries( myproto
@@ -41,8 +46,18 @@ set_target_properties(
 get_target_property( grpc_cpp_plugin_location gRPC::grpc_cpp_plugin LOCATION )
 target_include_directories(myproto PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-protobuf_generate(TARGET myproto LANGUAGE cpp)
-protobuf_generate(TARGET myproto PLUGIN "protoc-gen-grpc=${grpc_cpp_plugin_location}" LANGUAGE grpc GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc)
+protobuf_generate(
+    TARGET myproto
+    LANGUAGE cpp
+    IMPORT_DIRS ${PROTO_DIR}
+)
+protobuf_generate(
+    TARGET myproto
+    PLUGIN "protoc-gen-grpc=${grpc_cpp_plugin_location}"
+    LANGUAGE grpc
+    GENERATE_EXTENSIONS .grpc.pb.h .grpc.pb.cc
+    IMPORT_DIRS ${PROTO_DIR}
+)
 
 add_executable( ${target} ${SOURCES} )
 
