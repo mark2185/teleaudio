@@ -38,12 +38,18 @@ namespace WAV
         auto const formatValid { format.valid() };
         auto const dataValid   { data.valid() };
 
-        auto const expected_chunk_size{ 4 + ( 8 + format.subchunk1_size ) + ( 8 + data.subchunk2_size ) };
+        // the subchunk sizes denote the size of the _rest of the current chunk_
+        auto const bytes_before_subchunk_size{ 8 };
+        auto const expected_chunk_size
+        {
+            4 +
+            ( bytes_before_subchunk_size + format.subchunk1_size ) +
+            ( bytes_before_subchunk_size +   data.subchunk2_size )
+        };
 
         return riffValid && formatValid && dataValid && expected_chunk_size;
     }
 
-    // the rest
     DataSubChunk DataSubChunk::copy() const
     {
         auto buffer{ std::make_unique< std::byte[] >( subchunk2_size ) };
@@ -123,48 +129,17 @@ namespace WAV
             spdlog::error( "Cannot open output file '{}' for writing.", path );
             return false;
         }
-#if 1
-        auto const file_copy{ constructInMemory() };
-        std::fwrite( file_copy.get(), 1, file_copy.size, file_handle.get() );
-        return true;
-#else
-        auto total_bytes_written{ 0UL };
 
-        // writing the data from the stack
+        auto const buffer{ copyInMemory() };
+        auto const res{ std::fwrite( buffer.get(), 1, buffer.size, file_handle.get() ) };
+        if ( res != buffer.size )
         {
-            auto const   riffWrite{ std::fwrite( &riff  , 1, sizeof( riff   ), file_handle.get() ) };
-            auto const formatWrite{ std::fwrite( &format, 1, sizeof( format ), file_handle.get() ) };
-
-            auto const dataBytes{ sizeof( data.subchunk2_id ) + sizeof( data.subchunk2_size ) };
-            auto const dataWrite{ std::fwrite( &data, 1, dataBytes, file_handle.get() )       };
-
-            if
-            (
-                riffWrite   != sizeof( riff )
-             || formatWrite != sizeof( format )
-             || dataWrite   != dataBytes
-            )
-            {
-                spdlog::error( "Failed in writing the metadata of the .wav file." );
-                return false;
-            }
-
-            total_bytes_written += riffWrite + formatWrite + dataWrite;
-        }
-        // writing the raw audio data
-        {
-            auto const res{ std::fwrite( data.data.get(), 1, data.subchunk2_size, file_handle.get() ) };
-            if ( res != data.subchunk2_size )
-            {
-                spdlog::error( "Failed writing the raw audio data, written {} bytes, but should have written {}.", res, data.subchunk2_size );
-                return false;
-            }
-            total_bytes_written += res;
+            spdlog::error( "Writing to {} failed, written {} bytes, but should have written {}.", path, res, buffer.size );
+            return false;
         }
 
-        spdlog::info( "Written {} bytes to '{}'", total_bytes_written, path );
+        spdlog::info( "Written {} bytes to '{}'", res, path );
         return true;
-#endif
     }
 
 } // namespace WAV
