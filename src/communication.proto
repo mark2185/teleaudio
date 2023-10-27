@@ -4,7 +4,6 @@ package Teleaudio;
 
 service AudioService {
     rpc List     (Directory) returns (CmdOutput);
-    rpc Play     (File)      returns (stream AudioData);
     rpc Download (File)      returns (stream AudioData);
 }
 

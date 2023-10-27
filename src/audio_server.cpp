@@ -91,8 +91,8 @@ class TeleaudioImpl final : public AudioService::Service
         // sending the raw data, chunking if bigger than `chunk_size`
 
         std::uint32_t const chunk_size     { 5 * 1024 }; // 5 KiB
-        std::uint32_t       byte_offset    { 0U };
         std::uint32_t       bytes_remaining{ song.data.subchunk2_size };
+        std::uint32_t       byte_offset    {};
 
         auto const payload_data{ reinterpret_cast< char const * >( song.data.data.get() ) };
 
@@ -115,11 +115,6 @@ class TeleaudioImpl final : public AudioService::Service
 
         spdlog::info( "Sent {}/{} bytes in total", byte_offset, song.data.subchunk2_size );
 
-        return grpc::Status::OK;
-    }
-
-    grpc::Status Play( [[ maybe_unused ]] grpc::ServerContext * context, [[ maybe_unused ]] File const * request, [[ maybe_unused ]] grpc::ServerWriter< AudioData > * writer ) override
-    {
         return grpc::Status::OK;
     }
 
