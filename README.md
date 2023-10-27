@@ -17,10 +17,10 @@ $> conan profile detect
 $> conan install . --output-folder=build --build=missing
 $> cmake --preset conan-release
 $> cmake --build --preset conan-release
-$> ./build/build/Release/bin/teleaudio server test/storage/clean_wavs/ <port>
+$> ./build/build/Release/bin/teleaudio server <port> test/storage/clean_wavs/
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
-$> ./build/build/Release/bin/teleaudio <output-directory> <port>
+$> ./build/build/Release/bin/teleaudio <port> <output-directory>
 ```
 
 If the instructions aren't working because of presets, use these `cmake` invocations instead:
@@ -38,10 +38,10 @@ $> conan profile detect
 $> conan install . --output-folder=build --build=missing
 $> cmake         --preset conan-default
 $> cmake --build --preset conan-release # conan-release, not conan-default
-$> .\build\build\bin\Release\teleaudio server test\storage\clean_wavs\ <port>
+$> .\build\build\bin\Release\teleaudio server <port> test\storage\clean_wavs\
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
-$> .\build\build\bin\Release\teleaudio <output-directory> <port>
+$> .\build\build\bin\Release\teleaudio <port> <output-directory>
 ```
 ### Docker variant
 

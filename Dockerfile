@@ -23,4 +23,4 @@ EXPOSE 1989
 COPY test/storage/clean_wavs /audio
 
 ENTRYPOINT [ "/usr/local/bin/teleaudio" ]
-CMD [ "server", "/audio", "1989" ]
+CMD [ "server", "1989", "/audio" ]

@@ -73,8 +73,8 @@ int run_server( char const * argv [] )
         return 1;
     }
 
-    auto const storage{ argv[ 2 ] };
-    std::string const port_arg{ argv[ 3 ] };
+    std::string const port_arg{ argv[ 2 ] };
+    auto const storage{ argv[ 3 ] };
 
     int port{};
     std::from_chars( port_arg.data(), port_arg.data() + port_arg.size(), port );
