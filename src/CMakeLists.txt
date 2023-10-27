@@ -1,7 +1,7 @@
 set( target teleaudio )
 
 if ( MSVC )
-    add_compile_options( "/W4 $<$<CONFIG:RELEASE>:/O2>" )
+    add_compile_options( "/W4" "$<$<CONFIG:RELEASE>:/O2>" )
 else()
     # TODO: -fsanitize causes an ABI break with gRPC?
     add_compile_options("-Wall" "-Wextra" "-Werror" "-Wno-ignored-attributes" "-Wconversion" "$<$<CONFIG:RELEASE>:-O3>")
@@ -50,10 +50,14 @@ add_executable( ${target} ${SOURCES} )
 # that means we can't build statically if systemd is found, since it cannot be linked statically
 find_library( SYSTEMD_LIB systemd )
 
-# generator expression $<$<BOOL:SYSTEMD_LIB>:systemd> doesn't work for some reason
+# generator expressions (e.g. $<$<BOOL:SYSTEMD_LIB>:systemd>) don't work for some reason
 if ( NOT SYSTEMD_LIB )
-    # building statically when we can (i.e. docker, non-windows)
-    target_link_libraries( ${target} PRIVATE "$<$<BOOL:WIN32>:-static>" spdlog::spdlog myproto )
+    if ( WIN32 )
+        target_link_libraries( ${target} PRIVATE         spdlog::spdlog myproto )
+    else()
+        # building statically when we can (i.e. docker, non-windows)
+        target_link_libraries( ${target} PRIVATE -static spdlog::spdlog myproto )
+    endif()
 else()
     target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto systemd )
 endif()
