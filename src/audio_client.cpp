@@ -130,18 +130,17 @@ namespace Teleaudio
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
         }
 #ifdef _WIN32
-		// WAV::File song{ "C:\\Users\\Quickemu\\Desktop\\song1.wav" };
-		auto fp{ FileUtils::openFile( "C:\\Users\\Quickemu\\Desktop\\song1.wav", FileUtils::FileOpenMode::ReadBinary ) };
-		auto buffer{ std::make_unique< char [] >( 35422924 ) };
-		std::fread( buffer.get(), 1, 35422924, fp.get() );
-        auto const status{ PlaySound( reinterpret_cast< char * >( buffer.get() ), NULL, SND_MEMORY | SND_SYNC ) };
-		//if ( !song.valid() ) { spdlog::error( "Song not valid" ); }
+		auto const copy{ wav_file->constructInMemory() };
+        auto const status{ PlaySound( reinterpret_cast< char * >( copy.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
 		if ( !status )
 		{
 		    spdlog::error( "Failed to play sound for some reason" );
 		}
-#endif
         return true;
+#else
+		spdlog::warning( "Playing is not supported on non Windows OS." );
+		return false;
+#endif
     }
 
     bool AudioClient::Download( std::string_view const file, std::string_view const output_path ) const
