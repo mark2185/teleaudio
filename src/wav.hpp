@@ -23,14 +23,6 @@ struct OwningBuffer
     std::unique_ptr< std::byte[] > data;
     std::size_t                    size;
 
-    OwningBuffer() = delete;
-
-    OwningBuffer( OwningBuffer const & ) = delete;
-    OwningBuffer& operator=( OwningBuffer const & ) = delete;
-
-    OwningBuffer( OwningBuffer && ) {}
-    OwningBuffer& operator=( OwningBuffer && ) { return *this ;}
-
     OwningBuffer( std::size_t const size )
         : data{ std::make_unique< std::byte[] >( size ) }, size{ size }
     {}
@@ -123,17 +115,17 @@ struct File
     // Writes to given path
     [[ nodiscard ]] bool write( std::string_view const path ) const;
 
-    // Layouts the memory as it would be when written onto a disk
-    OwningBuffer constructInMemory() const
+    // Layouts the file in memory as it would be when written onto a disk
+    OwningBuffer copyInMemory() const
     {
         OwningBuffer buffer{ size_in_bytes() };
 
         auto output_iterator{ buffer.get() };
 
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &riff ), sizeof( riff ), output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &format ), sizeof( format ), output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &data ), 8, output_iterator );
-        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( data.data.get() ), data.subchunk2_size, output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &riff           ), sizeof( riff   )                                           , output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &format         ), sizeof( format )                                           , output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &data           ), sizeof( data.subchunk2_id ) + sizeof( data.subchunk2_size ), output_iterator );
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( data.data.get() ), data.subchunk2_size                                        , output_iterator );
 
         return buffer;
     }
