@@ -36,8 +36,8 @@ Note: `conan2` is required.
 ```bash
 $> conan profile detect
 $> conan install . --output-folder=build --build=missing
-$> cmake --preset conan-release
-$> cmake --build --preset conan-release
+$> cmake         --preset conan-default
+$> cmake --build --preset conan-release # conan-release, not conan-default
 $> .\build\build\bin\Release\teleaudio server test\storage\clean_wavs\ <port>
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal

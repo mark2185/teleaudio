@@ -6,7 +6,6 @@
 namespace WAV
 {
     // validations
-
     bool RiffChunk::valid() const
     {
         auto const magic_bytes_match
@@ -118,14 +117,18 @@ namespace WAV
 
     bool File::write( std::string_view const path ) const
     {
-        std::uint64_t total_bytes_written{};
-
         auto const file_handle{ FileUtils::openFile( path, FileUtils::FileOpenMode::WriteBinary ) };
         if ( !file_handle )
         {
             spdlog::error( "Cannot open output file '{}' for writing.", path );
             return false;
         }
+#if 1
+        auto const file_copy{ constructInMemory() };
+        std::fwrite( file_copy.get(), 1, file_copy.size, file_handle.get() );
+        return true;
+#else
+        auto total_bytes_written{ 0UL };
 
         // writing the data from the stack
         {
@@ -161,6 +164,7 @@ namespace WAV
 
         spdlog::info( "Written {} bytes to '{}'", total_bytes_written, path );
         return true;
+#endif
     }
 
 } // namespace WAV
