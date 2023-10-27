@@ -117,8 +117,9 @@ namespace Teleaudio
     }
 
 
-    bool AudioClient::Play( std::string_view const file ) const
+    bool AudioClient::Play( [[ maybe_unused ]] std::string_view const file ) const
     {
+#ifdef _WIN32
         auto const wav_file{ receiveFile( file ) };
         if ( !wav_file.has_value() )
         {
@@ -129,7 +130,6 @@ namespace Teleaudio
         {
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
         }
-#ifdef _WIN32
         auto const buffer{ wav_file->constructInMemory() };
         auto const status{ PlaySound( reinterpret_cast< char * >( buffer.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
         if ( !status )
@@ -138,7 +138,7 @@ namespace Teleaudio
         }
         return true;
 #else
-        spdlog::warn( "Playing is not supported on non Windows OS." );
+        spdlog::warn( "Playing is not supported on non-Windows OS." );
         return false;
 #endif
     }

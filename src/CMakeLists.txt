@@ -51,17 +51,15 @@ add_executable( ${target} ${SOURCES} )
 # that means we can't build statically if systemd is found, since it cannot be linked statically
 find_library( SYSTEMD_LIB systemd )
 
-# generator expressions (e.g. $<$<BOOL:SYSTEMD_LIB>:systemd>) don't work for some reason
-if ( NOT SYSTEMD_LIB )
-    if ( WIN32 )
-        target_link_libraries( ${target} PRIVATE         spdlog::spdlog myproto winmm )
-    else()
-        # building statically when we can (i.e. docker, non-windows)
-        target_link_libraries( ${target} PRIVATE -static spdlog::spdlog myproto )
-    endif()
-else()
-    target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto systemd )
+if ( SYSTEMD_LIB )
+    set( target_libraries "${target_libraries} systemd" )
 endif()
+
+if ( WIN32 )
+    set( target_libraries "${target_libraries} winmm" ) # for playing audio
+endif()
+
+target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto ${target_libraries} )
 
 set_target_properties(
     teleaudio
