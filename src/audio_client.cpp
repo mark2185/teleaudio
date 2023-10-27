@@ -130,16 +130,16 @@ namespace Teleaudio
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
         }
 #ifdef _WIN32
-		auto const copy{ wav_file->constructInMemory() };
-        auto const status{ PlaySound( reinterpret_cast< char * >( copy.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
-		if ( !status )
-		{
-		    spdlog::error( "Failed to play sound for some reason" );
-		}
+        auto const buffer{ wav_file->constructInMemory() };
+        auto const status{ PlaySound( reinterpret_cast< char * >( buffer.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
+        if ( !status )
+        {
+            spdlog::error( "Failed to play sound for some reason" );
+        }
         return true;
 #else
-		spdlog::warning( "Playing is not supported on non Windows OS." );
-		return false;
+        spdlog::warn( "Playing is not supported on non Windows OS." );
+        return false;
 #endif
     }
 
