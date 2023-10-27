@@ -1,4 +1,4 @@
-cmake_minimum_required( VERSION 3.21 )
+cmake_minimum_required( VERSION 3.20 )
 
 project(
     teleaudio
@@ -7,8 +7,7 @@ project(
     LANGUAGES CXX
 )
 
-# TODO: fsanitize causes an ABI break with gRPC?
-set( CMAKE_CXX_FLAGS "-Wall -std=c++20 -Wunused -Werror -Wextra -Wconversion -Wno-ignored-attributes -fPIC" )
+set( CMAKE_CXX_STANDARD 20 )
 
 add_subdirectory(src)
 

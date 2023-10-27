@@ -10,24 +10,39 @@ The files are expected to have only the `RIFF` header along with two subchunks, 
 
 #### Linux
 
-Note: `conan` and `ninja` packages are required.
+Note: `conan2` is required.
 
 ```bash
 $> conan profile detect
 $> conan install . --output-folder=build --build=missing
-$> cd build
-$> cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release ../
-$> cmake --build .
-$> ./bin/teleaudio server ../test/storage/clean_wavs/ <port>
+$> cmake --preset conan-release
+$> cmake --build --preset conan-release
+$> ./build/build/Release/bin/teleaudio server test/storage/clean_wavs/ <port>
 Server listening on 0.0.0.0:<port>
 $> # open up a new terminal
-$> ./bin/teleaudio <output-directory> <port>
+$> ./build/build/Release/bin/teleaudio <output-directory> <port>
+```
+
+If the instructions aren't working because of presets, use these `cmake` invocations instead:
+```bash
+$> cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake
+$> cmake --build build
 ```
 
 #### Windows
 
-Not yet tested.
+Note: `conan2` is required.
 
+```bash
+$> conan profile detect
+$> conan install . --output-folder=build --build=missing
+$> cmake --preset conan-default
+$> cmake --build build\build\
+$> .\build\build\Release\bin\teleaudio server test\storage\clean_wavs\ <port>
+Server listening on 0.0.0.0:<port>
+$> # open up a new terminal
+$> .\build\build\Release\bin\teleaudio <output-directory> <port>
+```
 ### Docker variant
 
 Build the image with `docker build -t teleaudio .`

@@ -6,15 +6,13 @@ RUN apt update && apt install -y cmake ninja-build gcc python3-pip && \
 
 COPY conanfile.txt /code/conanfile.txt
 
-RUN cd /code && \
-    conan profile detect && \
-    conan install . --output /build --build=missing
+RUN conan profile detect && \
+    conan install /code --output-folder=/build --build=missing
 
 COPY . /code
 
-RUN cd /build && \
-    cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release /code && \
-    cmake --build .
+RUN cmake -S /code -B /build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake && \
+    cmake --build /build
 
 FROM alpine:3.18.4
 
