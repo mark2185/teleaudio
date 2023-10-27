@@ -52,11 +52,11 @@ add_executable( ${target} ${SOURCES} )
 find_library( SYSTEMD_LIB systemd )
 
 if ( SYSTEMD_LIB )
-    set( target_libraries "${target_libraries} systemd" )
+    set( target_libraries "systemd" )
 endif()
 
 if ( WIN32 )
-    set( target_libraries "${target_libraries} winmm" ) # for playing audio
+    set( target_libraries "winmm" ) # for playing audio
 endif()
 
 target_link_libraries( ${target} PRIVATE spdlog::spdlog myproto ${target_libraries} )
