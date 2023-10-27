@@ -85,7 +85,11 @@ struct File
 
         format = metadata;
 
-        riff.size = 4 + ( 8 + format.subchunk1_size ) + ( 8 + data.subchunk2_size );
+        // the subchunk sizes denote the size of the _rest of the current chunk_
+        auto const bytes_before_subchunk_size{ 8 };
+        riff.size = static_cast< std::uint32_t >( MagicBytes::RIFF.size() )
+                  + bytes_before_subchunk_size + format.subchunk1_size
+                  + bytes_before_subchunk_size +   data.subchunk2_size;
     }
 
     // Loads up a .wav file
