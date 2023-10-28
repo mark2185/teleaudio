@@ -40,7 +40,7 @@ int run_client( char const * argv [] )
 
     // download bigger file
     {
-        auto const song_name{ "song1.wav" };
+        auto const song_name{ "big_file.wav" };
         spdlog::info( "download {} {}/{}", song_name, output_directory, song_name );
         auto const output_path{ fs::path{ output_directory } / song_name };
         if ( !c.Download( song_name, output_path.string() ) )
@@ -51,7 +51,7 @@ int run_client( char const * argv [] )
 
     // play a song
     {
-        auto const song_name{ "song1.wav" };
+        auto const song_name{ "big_file.wav" };
 
         spdlog::info( "play {}", song_name );
         if ( !c.Play( song_name ) )
