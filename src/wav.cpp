@@ -142,6 +142,8 @@ namespace WAV
         return true;
     }
 
+    // TODO: this is unnecessary overhead, we should construct WAV::File serialized on heap,
+    // not have it both partially stack and heap based
     Utils::OwningBuffer File::copyInMemory() const
     {
         Utils::OwningBuffer buffer{ size_in_bytes() };
