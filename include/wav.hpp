@@ -79,30 +79,23 @@ struct File
     {}
 
     // Takes ownership of the raw data
-    File( FmtSubChunk const metadata, std::byte * rawData, std::uint32_t const subchunk2_size )
-    {
-        data.data.reset( rawData );
-        data.subchunk2_size = subchunk2_size;
-
-        format = metadata;
-
-        // the subchunk sizes denote the size of the _rest of the current chunk_
-        auto const bytes_before_subchunk_size{ 8 };
-        riff.size = static_cast< std::uint32_t >( MagicBytes::RIFF.size() )
-                  + bytes_before_subchunk_size + format.subchunk1_size
-                  + bytes_before_subchunk_size +   data.subchunk2_size;
-    }
+    File( FmtSubChunk metadata, std::byte * raw_data, std::uint32_t subchunk2_size );
 
     // Loads up a .wav file
-    File( std::string_view const filename );
+    File( std::string_view filename );
 
-    [[ nodiscard ]] std::uint32_t size_in_bytes() const { return riff.size + 8; }
+    [[ nodiscard ]] std::uint32_t size_in_bytes() const
+    {
+        return static_cast< std::uint32_t >( riff.id.size()      )
+             + static_cast< std::uint32_t >( sizeof( riff.size ) )
+             + riff.size;
+    }
 
     // Checks the validity of all subchunks
     [[ nodiscard ]] bool valid() const;
 
     // Writes to given path
-    [[ nodiscard ]] bool write( std::string_view const path ) const;
+    [[ nodiscard ]] bool write( std::string_view path ) const;
 
     // Layouts the file in memory as it would be when written onto a disk
     Utils::OwningBuffer copyInMemory() const;

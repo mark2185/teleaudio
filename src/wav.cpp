@@ -58,6 +58,20 @@ namespace WAV
         return DataSubChunk{ subchunk2_id, subchunk2_size, std::move( buffer ) };
     }
 
+    File::File( FmtSubChunk const metadata, std::byte * raw_data, std::uint32_t const subchunk2_size )
+    {
+        data.data.reset( raw_data );
+        data.subchunk2_size = subchunk2_size;
+
+        format = metadata;
+
+        // the subchunk sizes denote the size of the _rest of the current chunk_
+        auto const bytes_before_subchunk_size{ 8 };
+        riff.size = static_cast< std::uint32_t >( MagicBytes::RIFF.size() )
+                  + bytes_before_subchunk_size + format.subchunk1_size
+                  + bytes_before_subchunk_size +   data.subchunk2_size;
+    }
+
     File::File( std::string_view const filename )
     {
         auto const file_handle{ FileUtils::openFile( filename, FileUtils::FileOpenMode::ReadBinary ) };
@@ -66,6 +80,7 @@ namespace WAV
             return;
         }
 
+        // TODO: possible optimization - mmap
         {
             auto       buffer{ std::make_unique< std::byte[] >( sizeof( RiffChunk ) )                };
             auto const res   { std::fread( buffer.get(), 1, sizeof( RiffChunk ), file_handle.get() ) };

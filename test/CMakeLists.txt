@@ -2,12 +2,14 @@ include_guard()
 
 enable_testing()
 
+set( RESOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/storage/clean_wavs" )
+get_filename_component(RESOURCES_ABS_PATH ${RESOURCES_PATH} ABSOLUTE)
+
+configure_file( "${CMAKE_CURRENT_LIST_DIR}/src/resources.hpp.in" "${CMAKE_CURRENT_LIST_DIR}/src/resources.hpp" @ONLY )
+
 set( SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/src/test_main.cpp
 )
-
-set(RESOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/storage")
-get_filename_component(RESOURCES_ABS_PATH ${RESOURCES_PATH} ABSOLUTE)
 
 add_executable( TeleaudioTest ${SOURCES} )
 
