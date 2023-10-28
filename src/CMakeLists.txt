@@ -2,7 +2,7 @@ set( target teleaudio )
 
 if ( MSVC )
     add_compile_options( "/W4" "$<$<CONFIG:RELEASE>:/O2>" )
-	add_definitions( "-D_CRT_SECURE_NO_WARNINGS" ) # it complains about fopen, I don't really feel like using fopen_s
+    add_definitions( "-D_CRT_SECURE_NO_WARNINGS" ) # it complains about fopen, I don't really feel like using fopen_s
 else()
     # TODO: -fsanitize causes an ABI break with gRPC?
     add_compile_options("-Wall" "-Wextra" "-Werror" "-Wno-ignored-attributes" "-Wconversion" "$<$<CONFIG:RELEASE>:-O3>")
