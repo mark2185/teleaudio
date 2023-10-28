@@ -68,9 +68,9 @@ struct DataSubChunk
 
 struct File
 {
-    RiffChunk    riff{};
-    FmtSubChunk  format{};
-    DataSubChunk data{};
+    RiffChunk    riff;
+    FmtSubChunk  format;
+    DataSubChunk data;
 
     File() = default;
 
