@@ -1,14 +1,18 @@
+#include <charconv>
 #include <cstdio>
+#include <filesystem>
 
 #include "audio_client.hpp"
 #include "audio_server.hpp"
 #include "wav.hpp"
+
 #include "spdlog/spdlog.h"
-#include <charconv>
-#include <filesystem>
+#include "spdlog/sinks/stdout_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 
 namespace fs = std::filesystem;
 
+std::shared_ptr< spdlog::logger > logger{};
 
 void print_help()
 {
@@ -83,8 +87,35 @@ int run_server( char const * argv [] )
     return 0;
 }
 
+void create_logger_with_multiple_sinks()
+{
+    auto const logfile{ fs::temp_directory_path() / "teleaudio.log" };
+
+    auto console_sink{ std::make_shared< spdlog::sinks::stdout_sink_st >() };
+    auto file_sink   { std::make_shared< spdlog::sinks::basic_file_sink_mt >( logfile.string() ) };
+
+    std::array< spdlog::sink_ptr, 2 >  const sinks
+    {
+        console_sink, file_sink
+    };
+
+    auto const combined_logger{ std::make_shared< spdlog::logger >( "combined_logger", std::begin(sinks), std::end( sinks ) ) };
+
+    spdlog::register_logger( combined_logger );
+
+    spdlog::set_default_logger( combined_logger );
+
+    logger = spdlog::get( "combined_logger" );
+
+    logger->flush_on(spdlog::level::debug);
+
+    spdlog::info( "Logging onto stdout, but also {}.", logfile.string() );
+}
+
 int main( int argc, char const * argv[] )
 {
+    create_logger_with_multiple_sinks();
+
     //  client
     if ( argc == 3 )
     {

@@ -138,7 +138,7 @@ namespace Teleaudio
         }
         return true;
 #else
-        spdlog::warn( "Playing is not supported on non-Windows OS." );
+        spdlog::warn( "Playing is not supported on a non-Windows OS." );
         return false;
 #endif
     }
