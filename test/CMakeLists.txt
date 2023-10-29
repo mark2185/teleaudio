@@ -2,6 +2,7 @@ include_guard()
 
 enable_testing()
 
+# TODO: move storage to git-lfs
 set( RESOURCES_PATH "${CMAKE_CURRENT_SOURCE_DIR}/storage/clean_wavs" )
 get_filename_component(RESOURCES_ABS_PATH ${RESOURCES_PATH} ABSOLUTE)
 
