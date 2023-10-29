@@ -69,3 +69,7 @@ $> docker run --rm -u$(id -u):$(id -g) --network host -v/path/to/local/folder:/o
 *Note: the `-u` flag is so the owner of the output file isn't `root`*
 
 *Note: using `--network host` is needed to access the container running the server.*
+
+## Tests
+
+Run the tests with by going into the `build/.../test/` directory and run `ctest -C Release --progress --verbose`.
