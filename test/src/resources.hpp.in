@@ -1,0 +1,3 @@
+#pragma once
+
+inline constexpr auto RESOURCES_PATH{ "@RESOURCES_PATH@" };
