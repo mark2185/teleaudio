@@ -13,6 +13,7 @@
 
 namespace fs = std::filesystem;
 
+// TODO: chroot jail
 // the directory where the audio files are
 static fs::path storage_directory;
 

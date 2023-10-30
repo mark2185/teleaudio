@@ -7,6 +7,8 @@ project(
     LANGUAGES CXX
 )
 
+# TODO: add clang-format
+
 set( CMAKE_CXX_STANDARD 20 )
 
 add_subdirectory(proto)
