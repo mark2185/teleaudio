@@ -19,7 +19,7 @@ public:
         : stub_{ AudioService::NewStub( channel ) }
     {}
 
-    // Print out the contents of a directory
+    // Returns the contents of a directory
     [[ nodiscard ]] std::string List( std::string_view directory = "." ) const;
 
     // Play the file on an audio device
