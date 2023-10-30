@@ -148,6 +148,7 @@ namespace Teleaudio
         auto const wav_file{ receiveFile( file ) };
         if ( !wav_file.has_value() )
         {
+            spdlog::error( "Received file {} isn't valid", file );
             return false;
         }
         if ( !wav_file->write( output_path ) )

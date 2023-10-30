@@ -8,19 +8,16 @@ namespace WAV
     // validations
     bool RiffChunk::valid() const
     {
-        auto const magic_bytes_match
-        {
-            std::memcmp(     id.data(), MagicBytes::RIFF.data(), MagicBytes::RIFF.size() ) == 0
-         && std::memcmp( format.data(), MagicBytes::WAVE.data(), MagicBytes::WAVE.size() ) == 0
-        };
+        auto const magic_bytes_match{ id == MagicBytes::RIFF && format == MagicBytes::WAVE };
         return magic_bytes_match;
     }
 
     bool FmtSubChunk::valid() const
     {
-        auto const magic_bytes_match   { std::memcmp( subchunk1_id.data(), MagicBytes::fmt.data(), MagicBytes::fmt.size() ) == 0 };
-        auto const expected_byte_rate  { sample_rate * num_channels * bits_per_sample / 8 };
-        auto const expected_block_align{ num_channels * bits_per_sample / 8 };
+        auto const bits_in_byte        { 8                                                           };
+        auto const magic_bytes_match   { subchunk1_id == MagicBytes::fmt                             };
+        auto const expected_byte_rate  { sample_rate * num_channels * bits_per_sample / bits_in_byte };
+        auto const expected_block_align{ num_channels * bits_per_sample / bits_in_byte               };
         return magic_bytes_match
             && expected_byte_rate   == byte_rate
             && expected_block_align == block_align;
@@ -28,15 +25,15 @@ namespace WAV
 
     bool DataSubChunk::valid() const
     {
-        auto const magic_bytes_match{ std::memcmp( subchunk2_id.data(), MagicBytes::data.data(), MagicBytes::data.size() ) == 0 };
+        auto const magic_bytes_match{ subchunk2_id == MagicBytes::data };
         return magic_bytes_match;
     }
 
     bool File::valid() const
     {
-        auto const riffValid   { riff.valid() };
-        auto const formatValid { format.valid() };
-        auto const dataValid   { data.valid() };
+        auto const riffValid  { riff.valid()   };
+        auto const formatValid{ format.valid() };
+        auto const dataValid  { data.valid()   };
 
         // the subchunk sizes denote the size of the _rest of the current chunk_
         auto const bytes_before_subchunk_size{ 8 };
