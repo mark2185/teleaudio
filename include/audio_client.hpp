@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <grpcpp/grpcpp.h>
-#include <optional>
 
 #include "communication.grpc.pb.h"
 
@@ -30,7 +29,7 @@ public:
 
 private:
     // helper for making a connection and receiving the file
-    [[ nodiscard ]] std::optional< WAV::File > receiveFile( std::string_view file ) const;
+    [[ nodiscard ]] std::unique_ptr< WAV::File > receiveFile( std::string_view file ) const;
 
     std::unique_ptr< Teleaudio::AudioService::Stub > stub_;
 };

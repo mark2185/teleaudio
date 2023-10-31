@@ -67,8 +67,8 @@ class TeleaudioImpl final : public AudioService::Service
             return grpc::Status::OK;
         }
 
-        WAV::File song{ file.string() };
-        if ( !song.valid() )
+        auto song{ WAV::File::load( file.string() ) };
+        if ( !song->valid() )
         {
             // TODO: there are 40 bytes extra in the file AWESOME.wav somewhere
             // the math doesn't add up
@@ -77,8 +77,8 @@ class TeleaudioImpl final : public AudioService::Service
         }
 
         // sending metadata first
-        AudioMetadata metadata{ setMetadata( song.format ) };
-        metadata.set_rawdatasize( song.data.subchunk2_size );
+        AudioMetadata metadata{ setMetadata( song->format ) };
+        metadata.set_rawdatasize( song->data.size );
 
         AudioData metadata_response;
         *metadata_response.mutable_metadata() = metadata;
@@ -92,10 +92,10 @@ class TeleaudioImpl final : public AudioService::Service
         // sending the raw data, chunking if bigger than `chunk_size`
 
         std::uint32_t const chunk_size     { 5 * 1024 }; // 5 KiB
-        std::uint32_t       bytes_remaining{ song.data.subchunk2_size };
+        std::uint32_t       bytes_remaining{ song->data.size };
         std::uint32_t       byte_offset    {};
 
-        auto const payload_data{ reinterpret_cast< char const * >( song.data.data.get() ) };
+        auto const payload_data{ reinterpret_cast< char const * >( song->data.data ) };
 
         AudioData rawdata_response;
         while ( bytes_remaining > 0 )
@@ -114,7 +114,7 @@ class TeleaudioImpl final : public AudioService::Service
             byte_offset     += payload_size;
         }
 
-        spdlog::info( "Sent {}/{} bytes in total", byte_offset, song.data.subchunk2_size );
+        spdlog::info( "Sent {}/{} bytes in total", byte_offset, song->data.size );
 
         return grpc::Status::OK;
     }

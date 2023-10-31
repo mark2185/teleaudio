@@ -20,12 +20,11 @@ namespace
         auto const pulse_code_modulation_chunk_size{ 16 };
         return
         {
-            .subchunk1_id    = WAV::MagicBytes::fmt,
-            .subchunk1_size  = pulse_code_modulation_chunk_size,
+            .size            = pulse_code_modulation_chunk_size,
             .audio_format    = pulse_code_modulation,
             .num_channels    = static_cast< std::uint16_t >( metadata.channels()              ),
-            .sample_rate     =                             ( metadata.samplerate()            ),
-            .byte_rate       =                             ( metadata.averagebytespersecond() ),
+            .sample_rate     =                               metadata.samplerate()             ,
+            .byte_rate       =                               metadata.averagebytespersecond()  ,
             .block_align     = static_cast< std::uint16_t >( metadata.blockalign()            ),
             .bits_per_sample = static_cast< std::uint16_t >( metadata.bitspersample()         )
         };
@@ -54,7 +53,11 @@ namespace Teleaudio
         return response.text();
     }
 
-    std::optional< WAV::File > AudioClient::receiveFile( std::string_view const filename ) const
+    // GCC complains about the `buffer` unique_ptr,
+    // it's a known false positive in some cases https://gcc.gnu.org/bugzilla/show_bug.cgi?id=100485
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+    std::unique_ptr< WAV::File > AudioClient::receiveFile( std::string_view const filename ) const
     {
         grpc::ClientContext context;
 
@@ -68,21 +71,25 @@ namespace Teleaudio
         reader->Read( &data );
 
         auto const metadata{ data.metadata() };
+        auto const raw_data_size{ static_cast< std::uint32_t >( metadata.rawdatasize() ) };
 
-        spdlog::info( "Metadata: {}ch {}Hz {}bps", data.metadata().channels(), data.metadata().samplerate(), data.metadata().bitspersample() );
+        spdlog::info( "Metadata: {}ch {}Hz {}bps", metadata.channels(), metadata.samplerate(), metadata.bitspersample() );
 
-        auto const raw_data_size  { static_cast< std::uint32_t >( data.metadata().rawdatasize() ) };
-        auto       raw_data_buffer{ std::make_unique< std::byte[] >( raw_data_size )              };
+        // -1 because data.data is an array of size 1
+        auto const buffer_size{ sizeof( WAV::File ) - 1 + raw_data_size };
+        auto buffer           { std::make_unique< std::byte[] >( buffer_size ) };
+        auto raw_data_iterator{ buffer.get() + buffer_size - raw_data_size };
         std::uint32_t bytes_read{};
+
         // reading the raw audio data
         while ( reader->Read( &data ) )
-        {   
+        {
             auto const payload_size{ static_cast< std::uint32_t >( data.rawdata().size() ) };
-            std::copy_n
+            raw_data_iterator = std::copy_n
             (
                 reinterpret_cast< std::byte * >( data.mutable_rawdata()->data() ),
                 payload_size,
-                raw_data_buffer.get() + bytes_read
+                raw_data_iterator
             );
             bytes_read += payload_size;
         }
@@ -95,46 +102,55 @@ namespace Teleaudio
         if ( !status.ok() )
         {
             spdlog::error( "Error while downloading the file '{}', error: {}", filename, status.error_message() );
-            return std::nullopt;
+            return nullptr;
         }
 
-        auto * rawdata{ raw_data_buffer.release() };
+        std::unique_ptr< WAV::File > file;
+        file.reset( reinterpret_cast< WAV::File * >( buffer.release() ) );
 
-        WAV::File file
-        {
-            parseMetadata( metadata ),
-            rawdata, // takes ownership
-            raw_data_size
-        };
+        // set the data subchunk
+        file->data.id = WAV::MagicBytes::data;
+        file->data.size = raw_data_size;
 
-        if ( !file.valid() )
+        // set the RIFF header
+        WAV::RiffChunk const r{ file->size_in_bytes() };
+        auto output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &r ), sizeof( r ), reinterpret_cast< std::byte * >( file.get() ) );
+
+        // set the format subchunk
+        WAV::FmtSubChunk const f{ parseMetadata( metadata ) };
+        output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &f ), sizeof( f ), output_iterator );
+
+        if ( !file->valid() )
         {
             spdlog::error( "Received file is not valid!" );
-            return std::nullopt;
+            return nullptr;
         }
 
         return file;
     }
+    #pragma GCC diagnostic pop
 
 
     bool AudioClient::Play( [[ maybe_unused ]] std::string_view const file ) const
     {
 #ifdef _WIN32
         auto const wav_file{ receiveFile( file ) };
-        if ( !wav_file.has_value() )
+        if ( !wav_file )
         {
+            spdlog::error( "Couldn't open file {} for playing.", file );
             return false;
         }
 
         if ( !wav_file->valid() )
         {
             spdlog::error( "Cannot play file {}, it is not a supported .WAV file", file );
+            return false;
         }
-        auto const buffer{ wav_file->copyInMemory() };
-        auto const status{ PlaySound( reinterpret_cast< char * >( buffer.data.get() ), NULL, SND_MEMORY | SND_SYNC ) };
+        auto const status{ PlaySound( reinterpret_cast< char const * >( wav_file.get() ), NULL, SND_MEMORY | SND_SYNC ) };
         if ( !status )
         {
             spdlog::error( "Failed to play sound for some reason" );
+            return false;
         }
         return true;
 #else
@@ -146,7 +162,7 @@ namespace Teleaudio
     bool AudioClient::Download( std::string_view const file, std::string_view const output_path ) const
     {
         auto const wav_file{ receiveFile( file ) };
-        if ( !wav_file.has_value() )
+        if ( !wav_file )
         {
             spdlog::error( "Received file {} isn't valid", file );
             return false;
