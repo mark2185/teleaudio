@@ -6,6 +6,7 @@
 #include "wav.hpp"
 
 #include "utils.hpp"
+#include <utility>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -75,9 +76,16 @@ namespace Teleaudio
 
         spdlog::info( "Metadata: {}ch {}Hz {}bps", metadata.channels(), metadata.samplerate(), metadata.bitspersample() );
 
-        // -1 because data.data is an array of size 1
-        auto const buffer_size{ sizeof( WAV::File ) - 1 + raw_data_size };
-        auto buffer           { std::make_unique< std::byte[] >( buffer_size ) };
+        auto const buffer_size
+        {
+            sizeof( WAV::RiffChunk   ) +
+            sizeof( WAV::FmtSubChunk ) +
+            sizeof( decltype( std::declval< WAV::DataSubChunk >().id   ) ) +
+            sizeof( decltype( std::declval< WAV::DataSubChunk >().size ) ) +
+            raw_data_size
+        };
+
+        auto buffer{ std::make_unique< std::byte[] >( buffer_size ) };
         auto raw_data_iterator{ buffer.get() + buffer_size - raw_data_size };
         std::uint32_t bytes_read{};
 
@@ -113,7 +121,7 @@ namespace Teleaudio
         file->data.size = raw_data_size;
 
         // set the RIFF header
-        WAV::RiffChunk const r{ file->size_in_bytes() };
+        WAV::RiffChunk const r{ static_cast< std::uint32_t >( buffer_size - ( sizeof( decltype( std::declval< WAV::RiffChunk >().id ) ) + sizeof( decltype( std::declval< WAV::RiffChunk >().size ) ) ) ) };
         auto output_iterator = std::copy_n( reinterpret_cast< std::byte const * >( &r ), sizeof( r ), reinterpret_cast< std::byte * >( file.get() ) );
 
         // set the format subchunk

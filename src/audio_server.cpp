@@ -68,12 +68,10 @@ class TeleaudioImpl final : public AudioService::Service
         }
 
         auto song{ WAV::File::load( file.string() ) };
-        if ( !song->valid() )
+        if ( !song )
         {
-            // TODO: there are 40 bytes extra in the file AWESOME.wav somewhere
-            // the math doesn't add up
-            // TODO: parsing LINE sections
-            spdlog::debug( "Loaded file is not valid" );
+            spdlog::debug( "Aborting because file is not valid" );
+            return grpc::Status::OK;
         }
 
         // sending metadata first

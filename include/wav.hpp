@@ -80,7 +80,7 @@ struct File
             return nullptr;
         }
         auto const file_size{ std::filesystem::file_size( filename ) };
-        auto buffer{ std::make_unique< std::byte[] >( std::filesystem::file_size( filename ) ) };
+        auto buffer{ std::make_unique< std::byte[] >( file_size ) };
         auto const bytes_read{ std::fread( buffer.get(), 1, file_size, file_handle.get() ) };
 
         if ( bytes_read != file_size )
@@ -91,6 +91,12 @@ struct File
 
         std::unique_ptr< File > ret;
         ret.reset( reinterpret_cast< File * >( buffer.release() ) );
+
+        if ( !ret->valid() )
+        {
+            spdlog::error( "Loaded file {} is not valid!", filename );
+            return nullptr;
+        }
         return ret;
     }
 
